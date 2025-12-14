@@ -1,0 +1,308 @@
+import React, { useState, useEffect } from 'react';
+import { Plus } from 'lucide-react';
+import { getPools, getCampuses, getRestaurants, admin } from '../../services/api';
+import type { Pool, Campus, Restaurant } from '../../types';
+
+const PoolsManagement: React.FC = () => {
+  const [pools, setPools] = useState<Pool[]>([]);
+  const [campuses, setCampuses] = useState<Campus[]>([]);
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    campusId: '',
+    collectionStart: '',
+    collectionEnd: '',
+    deliveryWindow: '',
+    expectedDeliveryTime: '',
+    maxOrders: 100,
+    deliveryFeePerOrder: 1000,
+    description: '',
+    participatingRestaurants: [] as string[],
+    manualStatus: 'open',
+    isActive: true
+  });
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const [poolsData, campusesData, restaurantsData] = await Promise.all([
+        getPools(),
+        getCampuses(),
+        getRestaurants()
+      ]);
+      setPools(poolsData);
+      setCampuses(campusesData);
+      setRestaurants(restaurantsData);
+    } catch (error) {
+      console.error('Failed to fetch data', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await admin.createPool(formData);
+      alert('Pool created successfully!');
+      setShowModal(false);
+      fetchData();
+      resetForm();
+    } catch (error: any) {
+      console.error('Failed to create pool', error);
+      alert(`Failed to create pool: ${error.response?.data?.detail || error.message}`);
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      campusId: '',
+      collectionStart: '',
+      collectionEnd: '',
+      deliveryWindow: '',
+      expectedDeliveryTime: '',
+      maxOrders: 100,
+      deliveryFeePerOrder: 1000,
+      description: '',
+      participatingRestaurants: [],
+      manualStatus: 'open',
+      isActive: true
+    });
+  };
+
+  const formatDateTime = (dateString: string) => {
+    return new Date(dateString).toLocaleString();
+  };
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold text-gray-900">Manage Pools</h1>
+        <button
+          onClick={() => setShowModal(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+        >
+          <Plus className="w-5 h-5" />
+          Create Pool
+        </button>
+      </div>
+
+      {loading ? (
+        <p>Loading...</p>
+      ) : (
+        <div className="grid gap-4">
+          {pools.map((pool) => (
+            <div key={pool.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">{pool.name}</h3>
+                  <p className="text-sm text-gray-600 mt-1">{pool.description || 'No description'}</p>
+                </div>
+                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                  pool.computedStatus === 'open' ? 'bg-green-100 text-green-800' : 
+                  pool.computedStatus === 'scheduled' ? 'bg-blue-100 text-blue-800' : 
+                  'bg-gray-100 text-gray-800'
+                }`}>
+                  {pool.computedStatus?.toUpperCase()}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div>
+                  <p className="text-gray-600">Collection Start</p>
+                  <p className="font-medium">{formatDateTime(pool.collectionStart)}</p>
+                </div>
+                <div>
+                  <p className="text-gray-600">Collection End</p>
+                  <p className="font-medium">{formatDateTime(pool.collectionEnd)}</p>
+                </div>
+                <div>
+                  <p className="text-gray-600">Delivery Time</p>
+                  <p className="font-medium">{formatDateTime(pool.expectedDeliveryTime)}</p>
+                </div>
+                <div>
+                  <p className="text-gray-600">Delivery Fee</p>
+                  <p className="font-medium">₹{pool.deliveryFeePerOrder / 100}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Create New Pool</h2>
+            
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Pool Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                  placeholder="e.g., Lunch Pool - Dec 11"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Campus *</label>
+                <select
+                  required
+                  value={formData.campusId}
+                  onChange={(e) => setFormData({...formData, campusId: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                >
+                  <option value="">Select Campus</option>
+                  {campuses.map((campus) => (
+                    <option key={campus.id} value={campus.id}>{campus.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Collection Start *</label>
+                  <input
+                    type="datetime-local"
+                    required
+                    value={formData.collectionStart}
+                    onChange={(e) => setFormData({...formData, collectionStart: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Collection End *</label>
+                  <input
+                    type="datetime-local"
+                    required
+                    value={formData.collectionEnd}
+                    onChange={(e) => setFormData({...formData, collectionEnd: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Expected Delivery *</label>
+                  <input
+                    type="datetime-local"
+                    required
+                    value={formData.expectedDeliveryTime}
+                    onChange={(e) => setFormData({...formData, expectedDeliveryTime: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Delivery Window *</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.deliveryWindow}
+                    onChange={(e) => setFormData({...formData, deliveryWindow: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                    placeholder="e.g., 12:30 PM - 1:00 PM"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Max Orders</label>
+                  <input
+                    type="number"
+                    value={formData.maxOrders}
+                    onChange={(e) => setFormData({...formData, maxOrders: parseInt(e.target.value)})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Delivery Fee (paise)</label>
+                  <input
+                    type="number"
+                    value={formData.deliveryFeePerOrder}
+                    onChange={(e) => setFormData({...formData, deliveryFeePerOrder: parseInt(e.target.value)})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                  />
+                  <p className="text-xs text-gray-600 mt-1">₹{formData.deliveryFeePerOrder / 100}</p>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                  rows={3}
+                  placeholder="Optional description"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Participating Restaurants</label>
+                <div className="max-h-40 overflow-y-auto border border-gray-300 rounded-lg p-2 space-y-2">
+                  {restaurants.map((restaurant) => (
+                    <label key={restaurant.id} className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={formData.participatingRestaurants.includes(restaurant.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setFormData({
+                              ...formData,
+                              participatingRestaurants: [...formData.participatingRestaurants, restaurant.id]
+                            });
+                          } else {
+                            setFormData({
+                              ...formData,
+                              participatingRestaurants: formData.participatingRestaurants.filter(id => id !== restaurant.id)
+                            });
+                          }
+                        }}
+                        className="rounded text-orange-600 focus:ring-orange-500"
+                      />
+                      <span className="text-sm">{restaurant.name}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex gap-4 pt-4">
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+                >
+                  Create Pool
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowModal(false);
+                    resetForm();
+                  }}
+                  className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default PoolsManagement;
