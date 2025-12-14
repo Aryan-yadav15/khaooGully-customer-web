@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Clock, Loader2, ArrowRight, MapPin, Store } from 'lucide-react';
-import { getPools, getCampuses } from '../services/api';
-import type { Pool, Campus } from '../types';
+import { Clock, Loader2, ArrowRight, MapPin, Store, Search } from 'lucide-react';
+import { getPools, getCampuses, getPoolRestaurantList } from '../services/api';
+import type { Pool, Campus, PoolRestaurantListItem } from '../types';
 import { formatLocalTime } from '../utils/datetime';
 
 const Pools: React.FC = () => {
@@ -11,6 +11,9 @@ const Pools: React.FC = () => {
   const [campus, setCampus] = useState<Campus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [restaurantNamesByPoolId, setRestaurantNamesByPoolId] = useState<Record<string, string[]>>({});
+  const [restaurantsLoading, setRestaurantsLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -28,6 +31,30 @@ const Pools: React.FC = () => {
           return status === 'open' || status === 'scheduled';
         });
         setPools(activePools);
+
+        setRestaurantsLoading(true);
+        try {
+          const poolRestaurantLists = await Promise.all(
+            activePools.map(async (pool: Pool) => {
+              const list = await getPoolRestaurantList(pool.id);
+              return { poolId: pool.id, list };
+            })
+          );
+
+          const nextMap: Record<string, string[]> = {};
+          for (const item of poolRestaurantLists) {
+            const names = (item.list || [])
+              .filter((r: PoolRestaurantListItem) => r.active_in_pool !== false)
+              .map((r: PoolRestaurantListItem) => r.restaurant_name)
+              .filter((name: unknown): name is string => typeof name === 'string' && name.trim().length > 0);
+
+            nextMap[item.poolId] = Array.from(new Set(names));
+          }
+
+          setRestaurantNamesByPoolId(nextMap);
+        } finally {
+          setRestaurantsLoading(false);
+        }
 
         const currentCampus = campusesData.find((c: Campus) => c.id === campusId);
         setCampus(currentCampus || null);
@@ -54,6 +81,16 @@ const Pools: React.FC = () => {
     return <div className="text-center text-red-600 p-4">{error}</div>;
   }
 
+  const normalizedSearch = searchTerm.trim().toLowerCase();
+  const filteredPools = !normalizedSearch
+    ? pools
+    : pools.filter((pool) => {
+        const nameMatch = (pool.name || '').toLowerCase().includes(normalizedSearch);
+        const restaurants = restaurantNamesByPoolId[pool.id] || [];
+        const restaurantMatch = restaurants.some((r) => r.toLowerCase().includes(normalizedSearch));
+        return nameMatch || restaurantMatch;
+      });
+
   return (
     <div className="max-w-3xl mx-auto">
       <div className="mb-8">
@@ -67,19 +104,33 @@ const Pools: React.FC = () => {
             Change Location
           </Link>
         </div>
+
+        <div className="mt-6">
+          <div className="relative">
+            <Search className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
+            <input
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search pools or restaurants"
+              className="w-full pl-11 pr-4 py-3 bg-white rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-lime-500/40 focus:border-lime-300"
+            />
+          </div>
+        </div>
       </div>
       
-      {pools.length === 0 ? (
+      {filteredPools.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-2xl shadow-sm border border-gray-100">
           <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
             <Store className="w-8 h-8 text-gray-400" />
           </div>
-          <p className="text-gray-900 font-medium text-lg mb-1">No active pools found</p>
-          <p className="text-gray-500">There are no active pools for this campus right now.</p>
+          <p className="text-gray-900 font-medium text-lg mb-1">No matching pools found</p>
+          <p className="text-gray-500">
+            {pools.length === 0 ? 'There are no active pools for this campus right now.' : 'Try a different search.'}
+          </p>
         </div>
       ) : (
         <div className="space-y-6">
-          {pools.map((pool) => (
+          {filteredPools.map((pool) => (
             <div key={pool.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
               <div className="bg-lime-50 px-6 py-3 flex items-center justify-between border-b border-lime-100">
                 <span className="text-lime-800 text-xs font-bold tracking-wide uppercase">
@@ -96,10 +147,20 @@ const Pools: React.FC = () => {
                     Restaurants Available
                   </p>
                   <div className="flex flex-wrap gap-2">
-                    {/* Placeholder for restaurant names since they are not in the pool object directly */}
-                    <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-lg text-sm font-medium">
-                      Multiple Restaurants
-                    </span>
+                    {(restaurantNamesByPoolId[pool.id] || []).length > 0 ? (
+                      (restaurantNamesByPoolId[pool.id] || []).map((name) => (
+                        <span
+                          key={`${pool.id}-${name}`}
+                          className="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium"
+                        >
+                          {name}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-lg text-sm font-medium">
+                        {restaurantsLoading ? 'Loading restaurants…' : 'Restaurants'}
+                      </span>
+                    )}
                   </div>
                 </div>
 

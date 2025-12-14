@@ -10,6 +10,16 @@ export interface Campus {
   updatedAt?: string;
 }
 
+export interface PoolRestaurantListItem {
+  pool_id: string;
+  pool_name: string;
+  restaurant_id: string;
+  restaurant_name: string;
+  restaurant_active: boolean;
+  active_in_pool: boolean;
+  added_at: string;
+}
+
 export interface Restaurant {
   id: string;
   name: string;

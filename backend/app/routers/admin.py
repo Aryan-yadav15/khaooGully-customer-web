@@ -10,6 +10,14 @@ from app.models.restaurant import RestaurantCreate, RestaurantUpdate, Restaurant
 from app.models.pool import OrderPoolCreate, OrderPoolUpdate, OrderPoolResponse
 from app.models.order import AdminPoolOrderSummary
 from app.utils.exceptions import NotFoundException
+from app.utils.webhooks import (
+    fetch_restaurant_phone,
+    build_restaurant_cumulative_orders,
+    format_rupees,
+    send_to_webhook,
+    send_orders_to_backend
+)
+from app.config import settings
 
 
 Router = APIRouter(prefix="/admin", tags=["Admin"])
@@ -66,6 +74,30 @@ async def CreateRestaurant(
     InsertData = restaurantData.model_dump(by_alias=True)
     
     Response = Db.table("restaurants").insert(InsertData).execute()
+    
+    return RestaurantResponse(**Response.data[0])
+
+
+@Router.put("/restaurants/{restaurantId}", response_model=RestaurantResponse)
+async def UpdateRestaurant(
+    restaurantId: str,
+    restaurantUpdate: RestaurantUpdate,
+    Db: Client = Depends(GetSupabaseAdmin),
+    Admin: dict = Depends(RequireAdmin)
+):
+    """Updates restaurant details."""
+
+    UpdateData = restaurantUpdate.model_dump(by_alias=True, exclude_unset=True)
+    # Avoid writing nulls for fields the UI leaves blank.
+    UpdateData = {Key: Value for Key, Value in UpdateData.items() if Value is not None}
+    
+    if not UpdateData:
+        Response = Db.table("restaurants").select("*").eq("id", restaurantId).execute()
+    else:
+        Response = Db.table("restaurants").update(UpdateData).eq("id", restaurantId).execute()
+    
+    if not Response.data:
+        raise NotFoundException(Detail="Restaurant not found")
     
     return RestaurantResponse(**Response.data[0])
 
@@ -214,14 +246,88 @@ async def DeletePool(
     return None
 
 
-@Router.post("/pools/{poolId}/close", response_model=OrderPoolResponse, response_model_by_alias=False)
+@Router.post("/pools/{poolId}/close", response_model_by_alias=False)
 async def ClosePool(
     poolId: str,
     Db: Client = Depends(GetSupabaseAdmin),
     Admin: dict = Depends(RequireAdmin)
 ):
-    """Marks a pool as closed by setting manual_status='closed'."""
-
+    """
+    Closes a pool and sends cumulative order notifications to restaurants via webhook.
+    
+    This endpoint:
+    1. Fetches all orders with status 'pooling' for this pool
+    2. Updates order status from 'pooling' to 'pending'
+    3. Groups orders by restaurant (cumulative items + totals)
+    4. Sends WhatsApp notifications to each restaurant via webhook
+    5. Marks the pool as closed
+    """
+    
+    # 1. Fetch orders with status 'pooling' for this pool
+    OrdersResponse = Db.table("order_details").select("*").eq("pool_id", poolId).eq("order_status", "pooling").execute()
+    db_orders = OrdersResponse.data or []
+    
+    webhook_results = {
+        "total_orders": len(db_orders),
+        "restaurants_notified": [],
+        "restaurants_failed": [],
+        "backend_sync": None
+    }
+    
+    # 2. Update order status from 'pooling' to 'pending'
+    if db_orders:
+        order_ids = [order["order_id"] for order in db_orders]
+        Db.table("customer_orders").update({"status": "pending"}).in_("id", order_ids).execute()
+        
+        # 2.5. Send individual orders to restaurant backend API (for their fetched_orders table)
+        backend_result = send_orders_to_backend(
+            db_orders, 
+            settings.RestaurantBackendUrl,
+            settings.RestaurantWebhookApiKey
+        )
+        webhook_results["backend_sync"] = backend_result
+        
+        # 3. Group orders by restaurant
+        restaurant_cumulative = build_restaurant_cumulative_orders(db_orders)
+        
+        # 4. Send webhook to each restaurant
+        for restaurant_id, data in restaurant_cumulative.items():
+            phone, restaurant_name = fetch_restaurant_phone(Db, restaurant_id)
+            
+            if not phone:
+                webhook_results["restaurants_failed"].append({
+                    "restaurant_id": restaurant_id,
+                    "reason": "Phone number not found"
+                })
+                continue
+            
+            cumulative_items = list(data["items"].values())
+            formatted_total = format_rupees(data["total_value"])
+            
+            payload = {
+                "restaurantId": restaurant_id,
+                "restaurantName": restaurant_name,
+                "restaurantPhone": phone,
+                "cumulativeOrders": cumulative_items,
+                "totalOrderValue": formatted_total
+            }
+            
+            success = send_to_webhook(payload, settings.RestaurantWebhookUrl)
+            
+            if success:
+                webhook_results["restaurants_notified"].append({
+                    "restaurant_id": restaurant_id,
+                    "restaurant_name": restaurant_name,
+                    "total_value": formatted_total
+                })
+            else:
+                webhook_results["restaurants_failed"].append({
+                    "restaurant_id": restaurant_id,
+                    "restaurant_name": restaurant_name,
+                    "reason": "Webhook delivery failed"
+                })
+    
+    # 5. Mark pool as closed
     Updated = Db.table("order_pools").update({"manual_status": "closed"}).eq("id", poolId).execute()
     if not Updated.data:
         raise NotFoundException(Detail="Pool not found")
@@ -234,8 +340,11 @@ async def ClosePool(
 
     Pool["computed_status"] = None
     Pool["participating_restaurants"] = CurrentRestaurants
+    
+    # Add webhook results to response
+    Pool["webhook_results"] = webhook_results
 
-    return OrderPoolResponse(**Pool)
+    return Pool
 
 
 @Router.get("/pools/{poolId}/orders", response_model=list[AdminPoolOrderSummary], response_model_by_alias=False)

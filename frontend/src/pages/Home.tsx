@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapPin, Loader2, Building2, ArrowRight } from 'lucide-react';
+import { MapPin, Loader2, Building2, ArrowRight, Lock } from 'lucide-react';
 import { getCampuses } from '../services/api';
 import type { Campus } from '../types';
+
+const ACTIVE_CAMPUS_CODES = ['C5-1'];
 
 const Home: React.FC = () => {
   const [campuses, setCampuses] = useState<Campus[]>([]);
@@ -29,6 +31,13 @@ const Home: React.FC = () => {
   const handleCampusSelect = (campusId: string) => {
     navigate(`/campus/${campusId}/pools`);
   };
+
+  const sortedCampuses = [...campuses].sort((a, b) => {
+    const aIsActive = ACTIVE_CAMPUS_CODES.includes(a.code);
+    const bIsActive = ACTIVE_CAMPUS_CODES.includes(b.code);
+    if (aIsActive === bIsActive) return a.name.localeCompare(b.name);
+    return aIsActive ? -1 : 1;
+  });
 
   if (loading) {
     return (
@@ -67,33 +76,76 @@ const Home: React.FC = () => {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        {campuses.map((campus) => (
-          <button
-            key={campus.id}
-            onClick={() => handleCampusSelect(campus.id)}
-            className="flex items-center p-6 bg-white rounded-2xl shadow-sm hover:shadow-md border border-gray-100 transition-all group text-left"
-          >
-            <div className="p-4 bg-gray-50 rounded-xl group-hover:bg-gray-100 transition-colors mr-5">
-              <Building2 className="w-8 h-8 text-gray-400 group-hover:text-gray-600" />
-            </div>
-            <div className="flex-grow">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="font-bold text-lg text-gray-900 mb-1">{campus.name}</h3>
-                  <div className="flex items-center text-gray-500 text-sm mb-3">
-                    <MapPin className="w-3 h-3 mr-1" />
-                    {campus.hotspotLocation}
+        {sortedCampuses.map((campus) => {
+          const isActiveCampus = ACTIVE_CAMPUS_CODES.includes(campus.code);
+
+          if (isActiveCampus) {
+            return (
+              <button
+                key={campus.id}
+                onClick={() => handleCampusSelect(campus.id)}
+                className="flex items-center p-6 bg-white rounded-2xl shadow-sm hover:shadow-md border border-gray-100 transition-all group text-left"
+              >
+                <div className="p-4 bg-gray-50 rounded-xl group-hover:bg-gray-100 transition-colors mr-5">
+                  <Building2 className="w-8 h-8 text-gray-400 group-hover:text-gray-600" />
+                </div>
+                <div className="flex-grow">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-bold text-lg text-gray-900 mb-1">{campus.name}</h3>
+                      <div className="flex items-center text-gray-500 text-sm mb-3">
+                        <MapPin className="w-3 h-3 mr-1" />
+                        {campus.hotspotLocation}
+                      </div>
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-gray-300 group-hover:text-lime-600 transition-colors" />
+                  </div>
+                  <div className="inline-flex items-center px-2.5 py-1 rounded-full bg-lime-50 text-lime-700 text-xs font-medium">
+                    <span className="w-1.5 h-1.5 rounded-full bg-lime-500 mr-1.5"></span>
+                    Active Pools
                   </div>
                 </div>
-                <ArrowRight className="w-5 h-5 text-gray-300 group-hover:text-lime-600 transition-colors" />
+              </button>
+            );
+          }
+
+          return (
+            <div
+              key={campus.id}
+              className="relative flex items-center p-6 bg-white rounded-2xl shadow-sm border border-gray-100 text-left"
+              aria-disabled="true"
+            >
+              <div className="absolute inset-0 rounded-2xl bg-white/30" />
+              <div className="flex items-center w-full blur-[1px] opacity-60">
+                <div className="p-4 bg-gray-50 rounded-xl mr-5">
+                  <Building2 className="w-8 h-8 text-gray-400" />
+                </div>
+                <div className="flex-grow">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-bold text-lg text-gray-900 mb-1">{campus.name}</h3>
+                      <div className="flex items-center text-gray-500 text-sm mb-3">
+                        <MapPin className="w-3 h-3 mr-1" />
+                        {campus.hotspotLocation}
+                      </div>
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-gray-300" />
+                  </div>
+                  <div className="inline-flex items-center px-2.5 py-1 rounded-full bg-gray-100 text-gray-700 text-xs font-medium">
+                    Coming soon
+                  </div>
+                </div>
               </div>
-              <div className="inline-flex items-center px-2.5 py-1 rounded-full bg-lime-50 text-lime-700 text-xs font-medium">
-                <span className="w-1.5 h-1.5 rounded-full bg-lime-500 mr-1.5"></span>
-                Active Pools
+
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-gray-200 text-gray-700 text-xs font-medium shadow-sm">
+                  <Lock className="w-3.5 h-3.5" />
+                  Coming soon
+                </div>
               </div>
             </div>
-          </button>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

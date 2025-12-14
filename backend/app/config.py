@@ -44,8 +44,18 @@ class Settings(BaseSettings):
     
     # Webhook Configuration
     RestaurantWebhookUrl: str = Field(
-        default="https://d7f64ec32b9a.ngrok-free.app/webhook/sendRestaurant",
+        default="https://primary-production-3b9d.up.railway.app/webhook/sendRestaurant",
         alias="restaurant_webhook_url"
+    )
+    
+    # Restaurant Backend API (for fetched_orders table)
+    RestaurantBackendUrl: str = Field(
+        default="https://d7f64ec32b9a.ngrok-free.app",
+        alias="restaurant_backend_url"
+    )
+    RestaurantWebhookApiKey: str = Field(
+        default="",
+        alias="restaurant_webhook_api_key"
     )
     
     @computed_field

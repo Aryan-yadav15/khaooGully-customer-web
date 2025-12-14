@@ -140,3 +140,98 @@ def send_to_webhook(payload: Dict[str, Any], webhook_url: str) -> bool:
     except Exception as e:
         print(f"⚠️ Webhook error for {payload['restaurantName']}: {e}")
         return False
+
+
+def send_orders_to_backend(orders: List[Dict[str, Any]], backend_url: str, api_key: str = "") -> Dict[str, Any]:
+    """
+    Send individual orders to restaurant team's backend API.
+    This populates their fetched_orders table.
+    
+    Args:
+        orders: List of order dictionaries from order_details view
+        backend_url: Base URL of restaurant backend
+        api_key: Optional API key for authentication
+        
+    Returns:
+        Dictionary with results:
+            - success: bool
+            - inserted_count: int
+            - skipped_count: int
+            - error: str (if failed)
+    """
+    url = f"{backend_url}/api/webhook/receive-orders"
+    headers = {
+        "Content-Type": "application/json",
+    }
+    
+    if api_key:
+        headers["X-API-Key"] = api_key
+    
+    # Transform orders to match the webhook payload format
+    formatted_orders = []
+    for order in orders:
+        formatted_orders.append({
+            "order_id": order.get("order_id") or order.get("id"),  # order_details view uses 'order_id'
+            "restaurant_id": order["restaurant_id"],
+            "restaurant_phone": order.get("restaurant_phone"),
+            "customer_name": order.get("customer_name", "Unknown"),
+            "customer_phone": order.get("customer_phone", "N/A"),
+            "items": order["items"],
+            "total_amount": order["total"],
+            "payment_status": order.get("payment_status", ""),
+            "order_status": "pending",
+            "created_at": order.get("created_at") or order.get("ordered_at")  # view might use 'ordered_at'
+        })
+    
+    payload = {"orders": formatted_orders}
+    
+    try:
+        response = requests.post(url, json=payload, headers=headers, timeout=30)
+        
+        if response.status_code == 200:
+            result = response.json()
+            inserted = result.get("inserted_count", 0)
+            skipped = result.get("skipped_count", 0)
+            print(f"✅ Restaurant Backend API: Inserted {inserted}, Skipped {skipped} duplicates")
+            return {
+                "success": True,
+                "inserted_count": inserted,
+                "skipped_count": skipped
+            }
+        else:
+            error_msg = f"Status {response.status_code}: {response.text}"
+            print(f"⚠️ Restaurant Backend API error: {error_msg}")
+            return {
+                "success": False,
+                "inserted_count": 0,
+                "skipped_count": 0,
+                "error": error_msg
+            }
+            
+    except requests.exceptions.ConnectionError:
+        error_msg = "Backend API not reachable"
+        print(f"⚠️ {error_msg}")
+        return {
+            "success": False,
+            "inserted_count": 0,
+            "skipped_count": 0,
+            "error": error_msg
+        }
+    except requests.exceptions.Timeout:
+        error_msg = "Backend API timeout"
+        print(f"⚠️ {error_msg}")
+        return {
+            "success": False,
+            "inserted_count": 0,
+            "skipped_count": 0,
+            "error": error_msg
+        }
+    except Exception as e:
+        error_msg = str(e)
+        print(f"⚠️ Restaurant Backend API error: {error_msg}")
+        return {
+            "success": False,
+            "inserted_count": 0,
+            "skipped_count": 0,
+            "error": error_msg
+        }

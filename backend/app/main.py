@@ -83,6 +83,17 @@ async def ValidationExceptionHandler(Request: Request, Exc: RequestValidationErr
     Returns:
         JSONResponse: Validation error response
     """
+    # Helpful debug logging for 422s (body parsing/validation happens before route handler).
+    # `Exc.body` is provided by FastAPI for RequestValidationError.
+    try:
+        print("❌ Validation error:")
+        print(Exc.errors())
+        print("Request body:")
+        print(getattr(Exc, "body", None))
+    except Exception:
+        # Never let logging break error handling.
+        pass
+
     Errors = []
     for Error in Exc.errors():
         Errors.append({

@@ -52,6 +52,11 @@ const RestaurantsManagement: React.FC = () => {
       fetchRestaurants();
     } catch (error) {
       console.error('Failed to save restaurant:', error);
+      // Surface backend validation details (422) in console for quick debugging.
+      const maybeAny = error as any;
+      if (maybeAny?.response?.data) {
+        console.error('Backend response:', maybeAny.response.data);
+      }
     }
   };
 

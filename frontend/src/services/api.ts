@@ -1,5 +1,5 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
-import type { Campus, Pool, Restaurant, Dish, Order, CartSummaryResponse, AdminPoolOrder, CustomerProfileSummary, CustomerOrderHistoryItem } from '../types';
+import type { Campus, Pool, Restaurant, Dish, Order, CartSummaryResponse, AdminPoolOrder, CustomerProfileSummary, CustomerOrderHistoryItem, PoolRestaurantListItem } from '../types';
 import { ensureAccessToken, refreshAccessToken } from '../lib/tokenCache';
 
 const API_URL = 'http://localhost:8000';
@@ -70,6 +70,11 @@ export const getPoolRestaurants = async (poolId: string): Promise<Restaurant[]> 
     .map((restaurantId: string) => getRestaurantDetails(restaurantId));
   
   return Promise.all(restaurantPromises);
+};
+
+export const getPoolRestaurantList = async (poolId: string): Promise<PoolRestaurantListItem[]> => {
+  const response = await api.get(`/pools/${poolId}/restaurants`);
+  return response.data.data || response.data;
 };
 
 export const getRestaurantDetails = async (id: string): Promise<Restaurant> => {
