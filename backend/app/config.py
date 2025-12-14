@@ -42,6 +42,12 @@ class Settings(BaseSettings):
     TaxPercentage: int = Field(default=5, alias="tax_percentage")
     MinCartValue: int = Field(default=5000, alias="min_cart_value")
     
+    # Webhook Configuration
+    RestaurantWebhookUrl: str = Field(
+        default="https://d7f64ec32b9a.ngrok-free.app/webhook/sendRestaurant",
+        alias="restaurant_webhook_url"
+    )
+    
     @computed_field
     @property
     def AllowedOrigins(self) -> List[str]:
