@@ -29,7 +29,7 @@ const Home: React.FC = () => {
   }, []);
 
   const handleCampusSelect = (campusId: string) => {
-    navigate(`/campus/${campusId}/pools`);
+    navigate(`/campus/${campusId}/restaurants`);
   };
 
   const sortedCampuses = [...campuses].sort((a, b) => {

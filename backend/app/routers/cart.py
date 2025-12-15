@@ -48,6 +48,12 @@ async def AddItemToCart(
     if not PoolResponse.data:
         raise NotFoundException(Detail="Pool not found")
     
+    Pool = PoolResponse.data[0]
+    PoolStatus = Pool.get("manual_status", "open")
+    
+    if PoolStatus not in ["open", "scheduled"]:
+        raise BadRequestException(Detail=f"This pool is currently {PoolStatus}. You cannot add items to closed pools.")
+    
     # Validate dish exists and get its details
     DishResponse = Db.table("dishes").select("*").eq("id", Request.dishId).execute()
     if not DishResponse.data:
@@ -179,6 +185,12 @@ async def GetCart(
         }
     
     Summary = SummaryResponse.data[0]
+    
+    # Coalesce NULL aggregates to 0 (happens when cart exists but has no items)
+    Summary["restaurant_count"] = Summary.get("restaurant_count") or 0
+    Summary["item_count"] = Summary.get("item_count") or 0
+    Summary["total_quantity"] = Summary.get("total_quantity") or 0
+    Summary["cart_subtotal"] = Summary.get("cart_subtotal") or 0
     
     # Get cart items (raw) and fetch related details explicitly to avoid ambiguous PostgREST embeddings
     ItemsResponse = Db.table("cart_items").select(

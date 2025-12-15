@@ -47,6 +47,11 @@ export const getCampuses = async (): Promise<Campus[]> => {
   return response.data.data || response.data;
 };
 
+export const getCampusRestaurants = async (campusId: string) => {
+  const response = await api.get(`/campuses/${campusId}/restaurants`);
+  return response.data.data || response.data;
+};
+
 export const getPools = async (campusId?: string): Promise<Pool[]> => {
   const params = campusId ? { campusId } : {};
   const response = await api.get('/pools/', { params });

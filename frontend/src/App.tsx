@@ -11,6 +11,7 @@ import OrderTracking from './pages/OrderTracking';
 import Profile from './pages/Profile';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import CampusRestaurants from './pages/CampusRestaurants';
 import Dashboard from './pages/admin/Dashboard';
 import PoolsManagement from './pages/admin/PoolsManagement';
 import CampusesManagement from './pages/admin/CampusesManagement';
@@ -28,6 +29,7 @@ function App() {
               <Route path='/' element={<Home />} />
               <Route path='/login' element={<Login />} />
               <Route path='/signup' element={<Signup />} />
+              <Route path='/campus/:campusId/restaurants' element={<CampusRestaurants />} />
               <Route path='/campus/:campusId/pools' element={<Pools />} />
               <Route path='/pool/:poolId' element={<PoolDetails />} />
               <Route path='/pool/:poolId/restaurant/:restaurantId' element={<RestaurantDetails />} />

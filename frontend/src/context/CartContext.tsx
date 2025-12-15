@@ -122,11 +122,16 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
 
+    // Enforce: max 3 distinct restaurants per cart (frontend-only)
+    const distinctRestaurants = new Set(cart.items.map((i) => i.restaurantId));
+    const addingNewRestaurant = !distinctRestaurants.has(restaurantId);
+    if (addingNewRestaurant && distinctRestaurants.size >= 3) {
+      alert('You can add items from up to 3 restaurants in a single pool.');
+      return;
+    }
+
     // Check if switching pools
     if (cart.poolId && cart.poolId !== poolId && cart.items.length > 0) {
-      if (!window.confirm('Adding items from a different pool will clear your current cart. Continue?')) {
-        return;
-      }
       await clearCart(cart.poolId);
     }
 
