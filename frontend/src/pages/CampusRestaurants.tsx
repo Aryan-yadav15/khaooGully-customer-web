@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Loader2, MapPin, Search, Store } from 'lucide-react';
-import { getCampuses, getCampusRestaurants } from '../services/api';
+import { AlertTriangle, Loader2, MapPin, Search, Store } from 'lucide-react';
+import { getCampuses, getCampusRestaurants, getPoolDetails } from '../services/api';
 import type { Campus, Restaurant } from '../types';
 import { useCart } from '../context/CartContext';
 
@@ -16,13 +16,21 @@ type CampusRestaurantPoolMapping = {
 const CampusRestaurants: React.FC = () => {
   const { campusId } = useParams<{ campusId: string }>();
   const navigate = useNavigate();
-  const { cart } = useCart();
+  const { cart, clearCart } = useCart();
 
   const [campus, setCampus] = useState<Campus | null>(null);
   const [rows, setRows] = useState<CampusRestaurantPoolMapping[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [poolNameById, setPoolNameById] = useState<Record<string, string>>({});
+  const [poolSwitchConfirm, setPoolSwitchConfirm] = useState<null | {
+    fromPoolId: string;
+    fromPoolName: string;
+    toPoolId: string;
+    toPoolName: string;
+    restaurantId: string;
+  }>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -63,6 +71,48 @@ const CampusRestaurants: React.FC = () => {
       return nameMatch || cuisineMatch || poolMatch;
     });
   }, [rows, normalizedSearch]);
+
+  const resolvePoolName = async (poolId: string) => {
+    const fromRows = rows.find((r) => r.poolId === poolId)?.poolName;
+    if (fromRows) return fromRows;
+
+    const cached = poolNameById[poolId];
+    if (cached) return cached;
+
+    try {
+      const pool = await getPoolDetails(poolId);
+      const name = pool?.name || poolId;
+      setPoolNameById((prev) => (prev[poolId] ? prev : { ...prev, [poolId]: name }));
+      return name;
+    } catch {
+      return poolId;
+    }
+  };
+
+  const handleRestaurantClick = (row: CampusRestaurantPoolMapping) => {
+    const rest = row.restaurant;
+    const isDifferentPool = !!cart.poolId && cart.poolId !== row.poolId && cart.items.length > 0;
+    if (isDifferentPool && cart.poolId) {
+      const fromPoolId = cart.poolId;
+      void (async () => {
+        const [fromName, toName] = await Promise.all([
+          resolvePoolName(fromPoolId),
+          resolvePoolName(row.poolId),
+        ]);
+
+        setPoolSwitchConfirm({
+          fromPoolId,
+          fromPoolName: fromName,
+          toPoolId: row.poolId,
+          toPoolName: toName,
+          restaurantId: rest.id,
+        });
+      })();
+      return;
+    }
+
+    navigate(`/pool/${row.poolId}/restaurant/${rest.id}`);
+  };
 
   if (loading) {
     return (
@@ -141,7 +191,7 @@ const CampusRestaurants: React.FC = () => {
             return (
               <div
                 key={`${row.poolId}-${rest.id}`}
-                onClick={() => navigate(`/pool/${row.poolId}/restaurant/${rest.id}`)}
+                onClick={() => handleRestaurantClick(row)}
                 className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all cursor-pointer group"
               >
                 <div className="h-40 overflow-hidden bg-gray-200 relative">
@@ -179,6 +229,47 @@ const CampusRestaurants: React.FC = () => {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {poolSwitchConfirm && (
+        <div className="fixed inset-x-0 bottom-4 z-50 px-4">
+          <div className="max-w-3xl mx-auto bg-white border border-gray-200 rounded-2xl shadow-lg p-4 md:p-5 flex items-start justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center flex-shrink-0">
+                <AlertTriangle className="w-5 h-5 text-amber-600" />
+              </div>
+              <div>
+                <p className="font-semibold text-gray-900">
+                  Switch pools and clear cart?
+                </p>
+                <p className="text-sm text-gray-600 mt-0.5">
+                  Your cart is currently in <span className="font-medium text-gray-900">{poolSwitchConfirm.fromPoolName}</span>.
+                  Opening <span className="font-medium text-gray-900">{poolSwitchConfirm.toPoolName}</span> will clear your cart.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <button
+                onClick={() => setPoolSwitchConfirm(null)}
+                className="px-4 py-2 rounded-xl border border-gray-200 text-gray-700 font-medium hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  const next = poolSwitchConfirm;
+                  setPoolSwitchConfirm(null);
+                  await clearCart(next.fromPoolId);
+                  navigate(`/pool/${next.toPoolId}/restaurant/${next.restaurantId}`);
+                }}
+                className="px-4 py-2 rounded-xl bg-lime-600 text-white font-semibold hover:bg-lime-700"
+              >
+                Continue
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

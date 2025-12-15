@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Star, Plus, Minus, Loader2, MapPin, ArrowLeft } from 'lucide-react';
+import { Star, Plus, Minus, Loader2, MapPin, ArrowLeft, Search } from 'lucide-react';
 import { getRestaurantDetails, getRestaurantMenu } from '../services/api';
 import { useCart } from '../context/CartContext';
 import type { Restaurant, Dish } from '../types';
@@ -9,6 +9,7 @@ const RestaurantDetails: React.FC = () => {
   const { poolId, restaurantId } = useParams<{ poolId: string; restaurantId: string }>();
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [menu, setMenu] = useState<Dish[]>([]);
+  const [menuSearch, setMenuSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'menu' | 'reviews'>('menu');
   const { addToCart, cart, updateQuantity, removeFromCart, refreshCart } = useCart();
@@ -42,6 +43,18 @@ const RestaurantDetails: React.FC = () => {
     const item = cart.items.find(item => item.dishId === dishId && item.restaurantId === restaurantId);
     return item ? item.quantity : 0;
   };
+
+  const normalizedMenuSearch = menuSearch.trim().toLowerCase();
+
+  const filteredMenu = useMemo(() => {
+    if (!normalizedMenuSearch) return menu;
+    return menu.filter((dish) => {
+      const nameMatch = (dish.name || '').toLowerCase().includes(normalizedMenuSearch);
+      const descMatch = (dish.description || '').toLowerCase().includes(normalizedMenuSearch);
+      const tagMatch = (dish.tags || []).some((t) => (t || '').toLowerCase().includes(normalizedMenuSearch));
+      return nameMatch || descMatch || tagMatch;
+    });
+  }, [menu, normalizedMenuSearch]);
 
   const handleAdd = async (dish: Dish) => {
     if (poolId && restaurantId) {
@@ -144,29 +157,65 @@ const RestaurantDetails: React.FC = () => {
       {activeTab === 'menu' && (
         <div>
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-gray-900">Recommended ({menu.length})</h2>
-            <button className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 flex items-center gap-2">
-              Sort
-            </button>
+            <h2 className="text-xl font-bold text-gray-900">
+              Recommended ({filteredMenu.length}{normalizedMenuSearch ? `/${menu.length}` : ''})
+            </h2>
           </div>
 
-          <div className="space-y-6">
-            {menu.map((dish) => {
+          <div className="mb-6">
+            <div className="relative">
+              <Search className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
+              <input
+                value={menuSearch}
+                onChange={(e) => setMenuSearch(e.target.value)}
+                placeholder="Search dishes (name, category, etc.)"
+                className="w-full pl-11 pr-4 py-3 bg-white rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-300"
+              />
+            </div>
+          </div>
+
+          {filteredMenu.length === 0 ? (
+            <div className="text-center py-12 bg-white rounded-2xl shadow-sm border border-gray-100">
+              <p className="text-gray-900 font-medium text-lg mb-1">No matching dishes</p>
+              <p className="text-gray-500">Try a different search.</p>
+              {normalizedMenuSearch && (
+                <button
+                  onClick={() => setMenuSearch('')}
+                  className="mt-4 text-green-600 font-medium hover:text-green-700"
+                >
+                  Clear search
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {filteredMenu.map((dish) => {
               const quantity = getQuantityInCart(dish.id);
               
               return (
                 <div key={dish.id} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex justify-between gap-6 group hover:shadow-md transition-shadow">
                   <div className="flex-1">
-                    <div className="mb-2">
+                    <div className="mb-2 flex items-center gap-2">
                       {dish.veg ? (
-                        <span className="w-4 h-4 border border-green-600 flex items-center justify-center p-0.5 rounded-sm">
+                        <span
+                          aria-label="Veg"
+                          title="Veg"
+                          className="w-4 h-4 border border-green-600 flex items-center justify-center p-0.5 rounded-sm"
+                        >
                           <span className="w-2 h-2 bg-green-600 rounded-full"></span>
                         </span>
                       ) : (
-                        <span className="w-4 h-4 border border-red-600 flex items-center justify-center p-0.5 rounded-sm">
+                        <span
+                          aria-label="Non-veg"
+                          title="Non-veg"
+                          className="w-4 h-4 border border-red-600 flex items-center justify-center p-0.5 rounded-sm"
+                        >
                           <span className="w-2 h-2 bg-red-600 rounded-full"></span>
                         </span>
                       )}
+                      <span className={dish.veg ? 'text-xs font-semibold text-green-700' : 'text-xs font-semibold text-red-700'}>
+                        {dish.veg ? 'VEG' : 'NON-VEG'}
+                      </span>
                     </div>
                     <h3 className="font-bold text-lg text-gray-900 mb-1">{dish.name}</h3>
                     <p className="text-gray-900 font-medium mb-3">₹{dish.price / 100}</p>
@@ -207,8 +256,9 @@ const RestaurantDetails: React.FC = () => {
                   </div>
                 </div>
               );
-            })}
-          </div>
+              })}
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -189,6 +189,10 @@ export const admin = {
     const response = await api.put(`/admin/dishes/${dishId}`, dishData);
     return response.data;
   },
+  bulkImportMenu: async (restaurantId: string, menuData: any) => {
+    const response = await api.post(`/admin/restaurants/${restaurantId}/bulk-menu`, menuData);
+    return response.data;
+  },
   
   // Pool Management
   createPool: async (poolData: any) => {

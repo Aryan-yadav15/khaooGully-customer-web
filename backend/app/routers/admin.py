@@ -9,7 +9,7 @@ from app.models.campus import CampusCreate, CampusUpdate, CampusResponse
 from app.models.restaurant import RestaurantCreate, RestaurantUpdate, RestaurantResponse, DishCreate, DishUpdate, DishResponse
 from app.models.pool import OrderPoolCreate, OrderPoolUpdate, OrderPoolResponse
 from app.models.order import AdminPoolOrderSummary
-from app.utils.exceptions import NotFoundException
+from app.utils.exceptions import NotFoundException, BadRequestException
 from app.utils.webhooks import (
     fetch_restaurant_phone,
     build_restaurant_cumulative_orders,
@@ -87,7 +87,7 @@ async def UpdateRestaurant(
 ):
     """Updates restaurant details."""
 
-    UpdateData = restaurantUpdate.model_dump(by_alias=True, exclude_unset=True)
+    UpdateData = restaurantUpdate.model_dump(by_alias=True, exclude_unset=True, mode='json')
     # Avoid writing nulls for fields the UI leaves blank.
     UpdateData = {Key: Value for Key, Value in UpdateData.items() if Value is not None}
     
@@ -127,7 +127,7 @@ async def CreateDish(
 ):
     """Creates a new dish."""
     
-    InsertData = dishData.model_dump(by_alias=True)
+    InsertData = dishData.model_dump(by_alias=True, mode='json')
     
     Response = Db.table("dishes").insert(InsertData).execute()
     
@@ -143,7 +143,7 @@ async def UpdateDish(
 ):
     """Updates dish details."""
     
-    UpdateData = dishUpdate.model_dump(by_alias=True, exclude_unset=True)
+    UpdateData = dishUpdate.model_dump(by_alias=True, exclude_unset=True, mode='json')
     
     if not UpdateData:
         Response = Db.table("dishes").select("*").eq("id", dishId).execute()
@@ -154,6 +154,48 @@ async def UpdateDish(
         raise NotFoundException(Detail="Dish not found")
     
     return DishResponse(**Response.data[0])
+
+
+@Router.post("/restaurants/{restaurantId}/bulk-menu", status_code=status.HTTP_201_CREATED)
+async def BulkImportMenu(
+    restaurantId: str,
+    menuData: dict,
+    Db: Client = Depends(GetSupabaseAdmin),
+    Admin: dict = Depends(RequireAdmin)
+):
+    """Bulk import menu items from JSON format."""
+    
+    # Verify restaurant exists
+    RestaurantResponse = Db.table("restaurants").select("id").eq("id", restaurantId).execute()
+    if not RestaurantResponse.data:
+        raise NotFoundException(Detail="Restaurant not found")
+    
+    dishes = menuData.get("dishes", [])
+    if not dishes:
+        raise BadRequestException(Detail="No dishes found in menu data")
+    
+    # Transform dishes to match our schema
+    DishesInsert = []
+    for dish in dishes:
+        DishesInsert.append({
+            "restaurant_id": restaurantId,
+            "name": dish.get("name", ""),
+            "description": dish.get("description") or dish.get("category", ""),
+            "price": int(dish.get("price", 0) * 100),  # Convert to paise
+            "veg": dish.get("veg", True),
+            "tags": [dish.get("category", "")] if dish.get("category") else [],
+            "image": dish.get("image") or None,
+            "rating": float(dish.get("rating", 0.0)),
+            "is_available": True
+        })
+    
+    # Insert all dishes
+    Response = Db.table("dishes").insert(DishesInsert).execute()
+    
+    return {
+        "message": f"Successfully imported {len(Response.data)} dishes",
+        "imported_count": len(Response.data)
+    }
 
 
 # Pool Management

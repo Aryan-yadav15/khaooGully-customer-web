@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, Edit2, Trash2, X, Search, Filter, MapPin, Star, DollarSign, Clock } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Search, Filter, MapPin, Star, DollarSign, Clock, Upload, FileJson } from 'lucide-react';
 import { getRestaurants, admin } from '../../services/api';
 import type { Restaurant } from '../../types';
 
@@ -7,6 +7,9 @@ const RestaurantsManagement: React.FC = () => {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRestaurant, setEditingRestaurant] = useState<Restaurant | null>(null);
+  const [isMenuImportOpen, setIsMenuImportOpen] = useState(false);
+  const [selectedRestaurantForMenu, setSelectedRestaurantForMenu] = useState<Restaurant | null>(null);
+  const [jsonInput, setJsonInput] = useState('');
 
   const [formData, setFormData] = useState({
     name: '',
@@ -125,6 +128,32 @@ const RestaurantsManagement: React.FC = () => {
     }));
   };
 
+  const handleImportMenu = async () => {
+    if (!selectedRestaurantForMenu) return;
+    
+    try {
+      const menuData = JSON.parse(jsonInput);
+      await admin.bulkImportMenu(selectedRestaurantForMenu.id, menuData);
+      alert(`Successfully imported ${menuData.dishes?.length || 0} dishes!`);
+      setIsMenuImportOpen(false);
+      setJsonInput('');
+      setSelectedRestaurantForMenu(null);
+    } catch (error: any) {
+      console.error('Failed to import menu:', error);
+      if (error instanceof SyntaxError) {
+        alert('Invalid JSON format. Please check your input.');
+      } else {
+        alert(`Failed to import menu: ${error.response?.data?.detail || error.message}`);
+      }
+    }
+  };
+
+  const openMenuImport = (restaurant: Restaurant) => {
+    setSelectedRestaurantForMenu(restaurant);
+    setJsonInput('');
+    setIsMenuImportOpen(true);
+  };
+
   return (
     <div className="p-8">
       <div className="flex justify-between items-center mb-8">
@@ -215,6 +244,13 @@ const RestaurantsManagement: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => openMenuImport(restaurant)}
+                        className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        title="Import Menu JSON"
+                      >
+                        <FileJson className="w-4 h-4" />
+                      </button>
                       <button
                         onClick={() => handleEdit(restaurant)}
                         className="p-2 text-gray-400 hover:text-lime-600 hover:bg-lime-50 rounded-lg transition-colors"
@@ -351,6 +387,39 @@ const RestaurantsManagement: React.FC = () => {
                   </div>
                 </div>
 
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Latitude *</label>
+                    <input
+                      type="number"
+                      step="0.000001"
+                      value={formData.latitude}
+                      onChange={(e) => setFormData({ ...formData, latitude: parseFloat(e.target.value) || 0 })}
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-lime-500 focus:border-transparent outline-none transition-all"
+                      placeholder="e.g. 20.2961"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Longitude *</label>
+                    <input
+                      type="number"
+                      step="0.000001"
+                      value={formData.longitude}
+                      onChange={(e) => setFormData({ ...formData, longitude: parseFloat(e.target.value) || 0 })}
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-lime-500 focus:border-transparent outline-none transition-all"
+                      placeholder="e.g. 85.8245"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                  <p className="text-xs text-blue-700 font-medium">
+                    💡 <strong>Tip:</strong> Use <a href="https://www.google.com/maps" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-900">Google Maps</a> to find exact coordinates. Right-click on location → Click the coordinates to copy them.
+                  </p>
+                </div>
+
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Cuisines</label>
                   <div className="flex gap-2 mb-3 flex-wrap">
@@ -398,6 +467,90 @@ const RestaurantsManagement: React.FC = () => {
                 className="px-6 py-3 bg-lime-500 text-white rounded-xl font-bold hover:bg-lime-600 transition-colors shadow-lg shadow-lime-200"
               >
                 {editingRestaurant ? 'Update Restaurant' : 'Add Restaurant'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Menu Import Modal */}
+      {isMenuImportOpen && selectedRestaurantForMenu && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-blue-50 to-indigo-50">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                  <FileJson className="w-6 h-6 text-blue-600" />
+                  Import Menu JSON
+                </h2>
+                <p className="text-sm text-gray-600 mt-1">
+                  Restaurant: <span className="font-semibold">{selectedRestaurantForMenu.name}</span>
+                </p>
+              </div>
+              <button 
+                onClick={() => setIsMenuImportOpen(false)} 
+                className="p-2 hover:bg-white rounded-full transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-8">
+              <div className="mb-6">
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+                  <h3 className="font-bold text-blue-900 mb-2 flex items-center gap-2">
+                    <Upload className="w-4 h-4" />
+                    JSON Format Example
+                  </h3>
+                  <pre className="text-xs text-blue-800 bg-white rounded p-3 overflow-x-auto">
+{`{
+  "restaurant_name": "Your Restaurant",
+  "dishes": [
+    {
+      "name": "Dish Name",
+      "price": 150.0,
+      "veg": true,
+      "category": "Category",
+      "description": "Optional description",
+      "rating": 4.0,
+      "image": "https://...",
+      "customizations": []
+    }
+  ]
+}`}
+                  </pre>
+                  <p className="text-xs text-blue-700 mt-2">
+                    💡 <strong>Note:</strong> Price should be in rupees (will be converted to paise automatically). Category will be used as a tag.
+                  </p>
+                </div>
+
+                <label className="block text-sm font-bold text-gray-700 mb-2">
+                  Paste Your Menu JSON
+                </label>
+                <textarea
+                  value={jsonInput}
+                  onChange={(e) => setJsonInput(e.target.value)}
+                  className="w-full h-96 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all font-mono text-sm"
+                  placeholder="Paste your menu JSON here..."
+                />
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setIsMenuImportOpen(false)}
+                className="px-6 py-3 border border-gray-200 rounded-xl font-bold text-gray-600 hover:bg-gray-100 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleImportMenu}
+                disabled={!jsonInput.trim()}
+                className="px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                <Upload className="w-5 h-5" />
+                Import Menu
               </button>
             </div>
           </div>

@@ -86,8 +86,8 @@ class DishBase(BaseModel):
 class DishCreate(DishBase):
     """Model for creating a dish."""
     
-    restaurantId: str = Field(validation_alias="restaurant_id")
-    isAvailable: bool = Field(True, validation_alias="is_available")
+    restaurantId: str = Field(validation_alias="restaurant_id", serialization_alias="restaurant_id")
+    isAvailable: bool = Field(True, validation_alias="is_available", serialization_alias="is_available")
     rating: Decimal = Field(default=0.0, ge=0, le=5)
 
 
@@ -100,7 +100,7 @@ class DishUpdate(BaseModel):
     veg: Optional[bool] = None
     tags: Optional[List[str]] = None
     image: Optional[str] = None
-    isAvailable: Optional[bool] = Field(None, validation_alias="is_available")
+    isAvailable: Optional[bool] = Field(None, validation_alias="is_available", serialization_alias="is_available")
 
 
 class DishResponse(DishBase):
