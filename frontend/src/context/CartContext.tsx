@@ -5,7 +5,7 @@ import { useAuth } from './AuthContext';
 
 interface CartContextType {
   cart: Cart;
-  addToCart: (poolId: string, restaurantId: string, dish: Dish, quantity: number) => Promise<void>;
+  addToCart: (poolId: string, restaurantId: string, dish: Dish, quantity: number, restaurantName?: string) => Promise<void>;
   removeFromCart: (itemId: string) => Promise<void>;
   updateQuantity: (itemId: string, quantity: number) => Promise<void>;
   clearCart: (poolId?: string) => Promise<void>;
@@ -76,6 +76,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           items: cartData.items?.map((item: any) => ({
             id: item.id,
             restaurantId: item.restaurantId,
+            restaurantName: item.restaurantName ?? item.restaurant_name,
             dishId: item.dishId,
             dish: {
               id: item.dishId,
@@ -116,7 +117,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return promise;
   }, [user]);
 
-  const addToCart = async (poolId: string, restaurantId: string, dish: Dish, quantity: number) => {
+  const addToCart = async (poolId: string, restaurantId: string, dish: Dish, quantity: number, restaurantName?: string) => {
     if (!user) {
       alert('Please login to add items to cart');
       return;
@@ -165,6 +166,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           {
             id: optimisticTempId,
             restaurantId,
+            restaurantName,
             dishId: dish.id,
             dish,
             quantity,

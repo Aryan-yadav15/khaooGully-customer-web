@@ -233,7 +233,7 @@ const CampusRestaurants: React.FC = () => {
       )}
 
       {poolSwitchConfirm && (
-        <div className="fixed inset-x-0 bottom-4 z-50 px-4">
+        <div className="fixed inset-x-0 bottom-4 z-[60] px-4">
           <div className="max-w-3xl mx-auto bg-white border border-gray-200 rounded-2xl shadow-lg p-4 md:p-5 flex items-start justify-between gap-4">
             <div className="flex items-start gap-3">
               <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center flex-shrink-0">

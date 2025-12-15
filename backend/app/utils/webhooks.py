@@ -90,17 +90,21 @@ def build_restaurant_cumulative_orders(db_orders: List[Dict[str, Any]]) -> Dict[
     return restaurant_map
 
 
-def format_rupees(amount: int) -> str:
+def format_rupees(amount_paise: int) -> str:
+    """Format an amount in paise as rupees (no currency symbol).
+
+    This is used for outbound webhook payloads (WhatsApp/Railway). Internally we
+    store money in paise, but webhook consumers expect rupees.
+
+    Examples:
+        40000 -> "400"
+        4050 -> "40.5"
     """
-    Format amount with comma separators (no currency symbol).
-    
-    Args:
-        amount: Integer amount in paise (smallest currency unit)
-        
-    Returns:
-        Formatted string like "58,000"
-    """
-    return f"{amount:,.0f}"
+
+    rupees = (amount_paise or 0) / 100
+    if float(rupees).is_integer():
+        return str(int(rupees))
+    return f"{rupees:.2f}".rstrip("0").rstrip(".")
 
 
 def send_to_webhook(payload: Dict[str, Any], webhook_url: str) -> bool:

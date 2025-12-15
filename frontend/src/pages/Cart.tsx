@@ -1,16 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Minus, ArrowLeft, Clock, Truck, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Minus, ArrowLeft, Clock, Truck, Trash2, Loader2, X } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { createOrder, getPoolDetails } from '../services/api';
 import type { Pool } from '../types';
 import { formatLocalTime } from '../utils/datetime';
 
 const Cart: React.FC = () => {
-  const { cart, updateQuantity, removeFromCart, cartTotal, clearCart, loading } = useCart();
+  const { cart, updateQuantity, removeFromCart, cartTotal, clearCart, loading, refreshCart } = useCart();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pool, setPool] = useState<Pool | null>(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+
+  // Ensure cart details (like restaurantName) are hydrated
+  useEffect(() => {
+    if (!cart.poolId) return;
+
+    const hasMissingRestaurantName = cart.items.some((it) => !(it.restaurantName || '').trim());
+    if (hasMissingRestaurantName) {
+      void refreshCart(cart.poolId);
+    }
+  }, [cart.poolId, cart.items, refreshCart]);
 
   // Fetch pool details (cart refresh is handled by CartContext)
   useEffect(() => {
@@ -36,13 +47,26 @@ const Cart: React.FC = () => {
     return acc;
   }, {} as Record<string, typeof cart.items>);
 
+  const restaurantNames = Array.from(
+    new Set(
+      cart.items
+        .map((it) => (it.restaurantName || '').trim())
+        .filter((n) => n.length > 0)
+    )
+  );
+
   // Calculate total (no platform fee or taxes)
   const deliveryFee = pool?.delivery_fee_per_order || 0;
   const totalAmount = cartTotal + deliveryFee;
 
-  const handleCheckout = async () => {
+  const handleProceedToPay = () => {
+    setShowPaymentModal(true);
+  };
+
+  const handleConfirmOrder = async () => {
     if (!cart.poolId || cart.items.length === 0) return;
 
+    setShowPaymentModal(false);
     setIsSubmitting(true);
     try {
       const orderPayload = {
@@ -133,11 +157,23 @@ const Cart: React.FC = () => {
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Cart Items */}
         <div className="flex-grow space-y-6">
-          {Object.entries(itemsByRestaurant).map(([restaurantId, items]) => (
+          {Object.entries(itemsByRestaurant).map(([restaurantId, items]) => {
+            const restaurantName = items[0]?.restaurantName || 'Restaurant';
+            const restaurantSubtotal = items.reduce((sum, it) => sum + it.price * it.quantity, 0);
+
+            return (
             <div key={restaurantId} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
               <div className="bg-gray-50 px-6 py-4 border-b border-gray-100">
-                <h3 className="font-bold text-gray-900 text-lg">Restaurant Items</h3>
-                <p className="text-sm text-gray-500">{items.length} item{items.length !== 1 ? 's' : ''}</p>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <h3 className="font-bold text-gray-900 text-lg truncate">{restaurantName}</h3>
+                    <p className="text-sm text-gray-500">{items.length} item{items.length !== 1 ? 's' : ''}</p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-xs text-gray-500">Subtotal</p>
+                    <p className="font-bold text-gray-900">₹{restaurantSubtotal / 100}</p>
+                  </div>
+                </div>
               </div>
               <div className="p-6">
                 {items.map((item) => (
@@ -194,7 +230,8 @@ const Cart: React.FC = () => {
                 ))}
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Order Summary */}
@@ -219,11 +256,13 @@ const Cart: React.FC = () => {
             </div>
 
             <div className="bg-gray-50 rounded-xl p-4 mb-6 text-center text-sm text-gray-600 border border-gray-100">
-              Ordering from {Object.keys(itemsByRestaurant).length} restaurant{Object.keys(itemsByRestaurant).length !== 1 ? 's' : ''}
+              {restaurantNames.length > 0
+                ? `Ordering from: ${restaurantNames.join(', ')}`
+                : `Ordering from ${Object.keys(itemsByRestaurant).length} restaurant${Object.keys(itemsByRestaurant).length !== 1 ? 's' : ''}`}
             </div>
 
             <button
-              onClick={handleCheckout}
+              onClick={handleProceedToPay}
               disabled={isSubmitting}
               className="w-full py-4 bg-lime-500 text-white rounded-xl font-bold text-lg hover:bg-lime-600 transition-colors shadow-lg shadow-lime-200 disabled:opacity-50 disabled:cursor-not-allowed mb-4"
             >
@@ -236,6 +275,57 @@ const Cart: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Payment Confirmation Modal */}
+      {showPaymentModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
+            <div className="flex items-start justify-between mb-4">
+              <h3 className="text-xl font-bold text-gray-900">Payment Method</h3>
+              <button
+                onClick={() => setShowPaymentModal(false)}
+                className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+            
+            <div className="mb-6">
+              <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-4">
+                <p className="text-sm text-yellow-800 font-medium mb-2">💰 Cash on Delivery</p>
+                <p className="text-sm text-yellow-700">
+                  We currently accept <span className="font-bold">Cash</span> or <span className="font-bold">UPI payment on delivery</span> only.
+                </p>
+              </div>
+              
+              <p className="text-gray-700 text-sm mb-4">
+                By clicking "Confirm Order", your order will be placed and you can pay when your food arrives at the delivery hotspot.
+              </p>
+              
+              <div className="bg-gray-50 rounded-lg p-3 text-sm text-gray-600">
+                <p className="font-semibold text-gray-900 mb-1">Order Total: ₹{totalAmount / 100}</p>
+                <p className="text-xs">Please keep exact change or UPI ready for payment.</p>
+              </div>
+            </div>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowPaymentModal(false)}
+                className="flex-1 py-3 px-4 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmOrder}
+                disabled={isSubmitting}
+                className="flex-1 py-3 px-4 bg-lime-500 text-white rounded-xl font-bold hover:bg-lime-600 transition-colors shadow-lg shadow-lime-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? 'Placing...' : 'Confirm Order'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

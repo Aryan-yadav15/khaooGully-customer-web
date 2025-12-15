@@ -58,7 +58,7 @@ const RestaurantDetails: React.FC = () => {
 
   const handleAdd = async (dish: Dish) => {
     if (poolId && restaurantId) {
-      await addToCart(poolId, restaurantId, dish, 1);
+      await addToCart(poolId, restaurantId, dish, 1, restaurant?.name);
     }
   };
 

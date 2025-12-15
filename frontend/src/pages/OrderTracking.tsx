@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { CheckCircle, Loader2 } from 'lucide-react';
 import { getOrderDetails } from '../services/api';
@@ -8,6 +8,28 @@ const OrderTracking: React.FC = () => {
   const { orderId } = useParams<{ orderId: string }>();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const formatMoney = (paise: number) => `₹${(Math.max(0, paise) / 100).toFixed(0)}`;
+
+  const items = useMemo(() => {
+    const raw: any = (order as any)?.items;
+    if (!raw) return [] as any[];
+
+    if (Array.isArray(raw)) return raw;
+    if (typeof raw === 'string') {
+      try {
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  }, [order]);
+
+  const paymentLabel = (order?.paymentStatus || '').toLowerCase() === 'completed'
+    ? 'Paid'
+    : 'Amount to pay';
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -41,12 +63,27 @@ const OrderTracking: React.FC = () => {
 
   const steps = [
     { status: 'pooling', label: 'Pooling Orders', description: 'Waiting for pool to close' },
+    { status: 'pending', label: 'Order Confirmed', description: 'Pool closed, order sent to restaurant' },
     { status: 'accepted', label: 'Order Accepted', description: 'Restaurant is preparing your food' },
     { status: 'out_for_delivery', label: 'Out for Delivery', description: 'On the way to hotspot' },
     { status: 'delivered', label: 'Delivered', description: 'Enjoy your meal!' },
   ];
 
-  const currentStepIndex = steps.findIndex(s => s.status === order.orderStatus);
+  // Map order status to step index (handle rejected/cancelled separately)
+  const currentStatus = order.orderStatus?.toLowerCase() || '';
+  let currentStepIndex = steps.findIndex(s => s.status === currentStatus);
+  
+  // If order is rejected or cancelled, show it stuck at the last known step
+  if (currentStepIndex === -1) {
+    if (currentStatus === 'rejected' || currentStatus === 'cancelled') {
+      // Find the highest step that could have been reached
+      // Rejected orders likely never got past 'pending' or 'accepted'
+      currentStepIndex = 1; // Show as confirmed but not progressing
+    } else {
+      // Unknown status - default to first step
+      currentStepIndex = 0;
+    }
+  }
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -58,8 +95,133 @@ const OrderTracking: React.FC = () => {
         <p className="text-gray-500">Order ID: #{order.orderId.slice(0, 8)}</p>
       </div>
 
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 mb-8">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">Order details</h2>
+            <p className="text-sm text-gray-600 mt-1">
+              {order.poolName ? (
+                <>
+                  <span className="font-medium text-gray-900">Pool:</span> {order.poolName}
+                </>
+              ) : null}
+              {order.campusName || order.deliveryHotspot ? (
+                <>
+                  {order.poolName ? <br /> : null}
+                  <span className="font-medium text-gray-900">Campus:</span> {order.campusName || '—'}
+                  {order.deliveryHotspot ? <> • {order.deliveryHotspot}</> : null}
+                </>
+              ) : null}
+              {order.restaurantName ? (
+                <>
+                  {(order.poolName || order.campusName || order.deliveryHotspot) ? <br /> : null}
+                  <span className="font-medium text-gray-900">Restaurant:</span> {order.restaurantName}
+                </>
+              ) : null}
+              {!order.poolName && !order.campusName && !order.deliveryHotspot && !order.restaurantName ? 'Items and total' : null}
+            </p>
+          </div>
+
+          <div className="text-right">
+            <p className="text-xs text-gray-500">{paymentLabel}</p>
+            <p className="text-2xl font-extrabold text-gray-900">{formatMoney(order.total)}</p>
+            <p className="text-xs text-gray-500 mt-1">{order.paymentStatus}</p>
+          </div>
+        </div>
+
+        <div className="mt-6 divide-y">
+          {items.length === 0 ? (
+            <p className="text-sm text-gray-600">No items found for this order.</p>
+          ) : (
+            items.map((it: any, idx: number) => {
+              const name = it.dish_name ?? it.dishName ?? it.name ?? it.dishName ?? 'Item';
+              const quantity = typeof it.quantity === 'number' ? it.quantity : 1;
+              const unitPrice = typeof it.unit_price === 'number'
+                ? it.unit_price
+                : (typeof it.unitPrice === 'number' ? it.unitPrice : (typeof it.price === 'number' ? it.price : 0));
+              const lineTotal = typeof it.subtotal === 'number' ? it.subtotal : unitPrice * quantity;
+              const isVeg = typeof it.veg === 'boolean' ? it.veg : true;
+
+              return (
+                <div key={`${idx}-${String(name)}`} className="py-4 flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      {isVeg ? (
+                        <span className="w-4 h-4 border border-green-600 flex items-center justify-center p-0.5 rounded-sm flex-shrink-0">
+                          <span className="w-2 h-2 bg-green-600 rounded-full"></span>
+                        </span>
+                      ) : (
+                        <span className="w-4 h-4 border border-red-600 flex items-center justify-center p-0.5 rounded-sm flex-shrink-0">
+                          <span className="w-2 h-2 bg-red-600 rounded-full"></span>
+                        </span>
+                      )}
+                      <p className="font-semibold text-gray-900 truncate">{name}</p>
+                    </div>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {quantity} × {formatMoney(unitPrice)}
+                      {it.special_instructions ? <> • <span className="italic">{String(it.special_instructions)}</span></> : null}
+                    </p>
+                  </div>
+
+                  <p className="font-bold text-gray-900 flex-shrink-0">{formatMoney(lineTotal)}</p>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        <div className="mt-6 border-t pt-5">
+          <div className="flex items-center justify-between text-sm text-gray-700">
+            <span>Subtotal</span>
+            <span className="font-medium">{formatMoney(order.subtotal)}</span>
+          </div>
+          <div className="flex items-center justify-between text-sm text-gray-700 mt-2">
+            <span>Delivery fee</span>
+            <span className="font-medium">{formatMoney(order.deliveryFee)}</span>
+          </div>
+          {(order.platformFee || 0) > 0 && (
+            <div className="flex items-center justify-between text-sm text-gray-700 mt-2">
+              <span>Platform fee</span>
+              <span className="font-medium">{formatMoney(order.platformFee)}</span>
+            </div>
+          )}
+          {(order.taxes || 0) > 0 && (
+            <div className="flex items-center justify-between text-sm text-gray-700 mt-2">
+              <span>Taxes</span>
+              <span className="font-medium">{formatMoney(order.taxes)}</span>
+            </div>
+          )}
+          {(order.discount || 0) > 0 && (
+            <div className="flex items-center justify-between text-sm text-gray-700 mt-2">
+              <span>Discount</span>
+              <span className="font-medium">- {formatMoney(order.discount)}</span>
+            </div>
+          )}
+          <div className="flex items-center justify-between text-base text-gray-900 mt-4">
+            <span className="font-bold">Total</span>
+            <span className="font-extrabold">{formatMoney(order.total)}</span>
+          </div>
+        </div>
+      </div>
+
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
         <h2 className="text-xl font-bold mb-6">Order Status</h2>
+        
+        {/* Show alert for rejected/cancelled orders */}
+        {(currentStatus === 'rejected' || currentStatus === 'cancelled') && (
+          <div className={`mb-6 p-4 rounded-lg ${
+            currentStatus === 'cancelled' 
+              ? 'bg-gray-100 border border-gray-300 text-gray-700' 
+              : 'bg-red-50 border border-red-200 text-red-700'
+          }`}>
+            <p className="font-semibold">
+              {currentStatus === 'cancelled' ? 'Order Cancelled' : 'Order Rejected'}
+            </p>
+            {order.cancellationReason && (
+              <p className="text-sm mt-1">{order.cancellationReason}</p>
+            )}
+          </div>
+        )}
         
         <div className="relative">
           {steps.map((step, index) => {

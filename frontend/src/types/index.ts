@@ -77,6 +77,7 @@ export interface Pool {
 export interface CartItem {
   id: string;
   restaurantId: string;
+  restaurantName?: string;
   dishId: string;
   dish: Dish;
   quantity: number;
