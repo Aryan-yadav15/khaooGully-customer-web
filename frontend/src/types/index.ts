@@ -153,6 +153,9 @@ export interface Order {
   cancelledAt?: string;
   cancellationReason?: string;
   deliveredAt?: string;
+  driverName?: string;
+  driverPhone?: string;
+  otp?: string;
   deliveryWindow: string;
   fleetbasePoolId?: string;
   orderedAt: string;

@@ -204,6 +204,58 @@ const OrderTracking: React.FC = () => {
         </div>
       </div>
 
+      {/* Driver Details & OTP Card */}
+      {(order.driverName || order.driverPhone || order.otp) && (
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl shadow-sm border border-blue-100 p-6 mb-8">
+          <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <span className="text-blue-600">🚗</span>
+            Delivery Details
+          </h2>
+          
+          <div className="space-y-4">
+            {order.driverName && (
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                  <span className="text-blue-600 font-bold">👤</span>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Driver Name</p>
+                  <p className="text-base font-bold text-gray-900">{order.driverName}</p>
+                </div>
+              </div>
+            )}
+            
+            {order.driverPhone && (
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                  <span className="text-green-600 font-bold">📞</span>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Contact Number</p>
+                  <p className="text-base font-bold text-gray-900">{order.driverPhone}</p>
+                </div>
+              </div>
+            )}
+            
+            {order.otp && (
+              <div className="mt-4 p-4 bg-white rounded-xl border-2 border-yellow-300 shadow-sm">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex-1">
+                    <p className="text-xs text-gray-500 font-medium uppercase tracking-wide mb-1">Delivery OTP</p>
+                    <p className="text-sm text-gray-600 mb-2">Share this OTP with your driver for verification</p>
+                  </div>
+                  <div className="flex-shrink-0">
+                    <div className="bg-yellow-400 px-4 py-3 rounded-lg">
+                      <p className="text-3xl font-black text-gray-900 tracking-widest text-center">{order.otp}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
         <h2 className="text-xl font-bold mb-6">Order Status</h2>
         
