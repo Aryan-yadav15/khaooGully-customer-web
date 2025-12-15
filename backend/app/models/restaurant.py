@@ -18,8 +18,8 @@ class RestaurantBase(BaseModel):
     phone: Optional[str] = Field(None, max_length=20)
     email: Optional[EmailStr] = None
     location: Optional[str] = Field(None, max_length=200)
-    deliveryTime: int = Field(default=30, ge=0, le=180, validation_alias="delivery_time")
-    costForTwo: int = Field(default=40000, ge=0, validation_alias="cost_for_two")
+    deliveryTime: int = Field(default=30, ge=0, le=180, validation_alias="delivery_time", serialization_alias="delivery_time")
+    costForTwo: int = Field(default=40000, ge=0, validation_alias="cost_for_two", serialization_alias="cost_for_two")
     cuisine: List[str] = Field(default_factory=list)
     image: Optional[str] = None
 
@@ -27,7 +27,7 @@ class RestaurantBase(BaseModel):
 class RestaurantCreate(RestaurantBase):
     """Model for creating a restaurant."""
     
-    isActive: bool = Field(True, validation_alias="is_active")
+    isActive: bool = Field(True, validation_alias="is_active", serialization_alias="is_active")
     rating: Decimal = Field(default=0.0, ge=0, le=5)
 
 

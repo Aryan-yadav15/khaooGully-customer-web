@@ -71,7 +71,7 @@ async def CreateRestaurant(
 ):
     """Creates a new restaurant."""
     
-    InsertData = restaurantData.model_dump(by_alias=True)
+    InsertData = restaurantData.model_dump(by_alias=True, mode='json')
     
     Response = Db.table("restaurants").insert(InsertData).execute()
     
