@@ -72,7 +72,7 @@ const Pools: React.FC = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-lime-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -92,93 +92,89 @@ const Pools: React.FC = () => {
       });
 
   return (
-    <div className="max-w-3xl mx-auto">
-      <div className="mb-8">
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">
-          Active Pools at {campus?.name || 'Campus'}
-        </h2>
-        <div className="flex items-center justify-between">
-          <p className="text-gray-500">Join a pool to save on delivery fees and unlock group discounts.</p>
-          <Link to="/" className="flex items-center text-lime-600 hover:text-lime-700 text-sm font-medium">
+    <div className="max-w-4xl mx-auto">
+      <div className="mb-10">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-3xl font-bold text-gray-900">
+            Active Pools at {campus?.name || 'Campus'}
+          </h2>
+          <Link to="/" className="flex items-center text-gray-500 hover:text-primary text-sm font-medium transition-colors">
             <MapPin className="w-4 h-4 mr-1" />
             Change Location
           </Link>
         </div>
+        <p className="text-gray-500 mb-8 max-w-2xl">Join a pool to save on delivery fees and unlock group discounts. Orders are batched together for efficiency.</p>
 
-        <div className="mt-6">
-          <div className="relative">
-            <Search className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
-            <input
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search pools or restaurants"
-              className="w-full pl-11 pr-4 py-3 bg-white rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-lime-500/40 focus:border-lime-300"
-            />
-          </div>
+        <div className="relative group">
+          <Search className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2 group-focus-within:text-primary transition-colors" />
+          <input
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search pools or restaurants..."
+            className="w-full pl-12 pr-4 py-4 bg-white rounded-2xl border border-gray-100 shadow-soft focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+          />
         </div>
       </div>
       
       {filteredPools.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-2xl shadow-sm border border-gray-100">
-          <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Store className="w-8 h-8 text-gray-400" />
+        <div className="text-center py-16 bg-white rounded-3xl shadow-soft border border-gray-50">
+          <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Store className="w-10 h-10 text-gray-300" />
           </div>
-          <p className="text-gray-900 font-medium text-lg mb-1">No matching pools found</p>
+          <p className="text-gray-900 font-bold text-xl mb-2">No matching pools found</p>
           <p className="text-gray-500">
-            {pools.length === 0 ? 'There are no active pools for this campus right now.' : 'Try a different search.'}
+            {pools.length === 0 ? 'There are no active pools for this campus right now.' : 'Try a different search term.'}
           </p>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="grid gap-8 md:grid-cols-2">
           {filteredPools.map((pool) => (
-            <div key={pool.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
-              <div className="bg-lime-50 px-6 py-3 flex items-center justify-between border-b border-lime-100">
-                <span className="text-lime-800 text-xs font-bold tracking-wide uppercase">
-                  120 Minutes
-                </span>
-                <Store className="w-5 h-5 text-lime-600 opacity-20" />
-              </div>
-              
-              <div className="p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-4">Pool - {pool.name}</h3>
+            <div key={pool.id} className="bg-white rounded-3xl shadow-soft border border-gray-50 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col h-full">
+              <div className="p-6 flex-grow">
+                <div className="flex justify-between items-start mb-4">
+                  <div className="bg-primary-light text-primary-dark px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider">
+                    120 Minutes
+                  </div>
+                  <div className="flex items-center gap-1.5 text-red-500 bg-red-50 px-3 py-1 rounded-lg text-xs font-bold">
+                    <Clock className="w-3.5 h-3.5" />
+                    {formatLocalTime(pool.collection_end)}
+                  </div>
+                </div>
+
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">{pool.name}</h3>
                 
                 <div className="mb-6">
-                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
-                    Restaurants Available
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">
+                    Restaurants
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {(restaurantNamesByPoolId[pool.id] || []).length > 0 ? (
                       (restaurantNamesByPoolId[pool.id] || []).map((name) => (
                         <span
                           key={`${pool.id}-${name}`}
-                          className="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium"
+                          className="px-3 py-1.5 bg-gray-50 text-gray-600 rounded-lg text-xs font-semibold border border-gray-100"
                         >
                           {name}
                         </span>
                       ))
                     ) : (
-                      <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-lg text-sm font-medium">
-                        {restaurantsLoading ? 'Loading restaurants…' : 'Restaurants'}
+                      <span className="px-3 py-1.5 bg-gray-50 text-gray-400 rounded-lg text-xs font-medium italic">
+                        {restaurantsLoading ? 'Loading...' : 'No restaurants listed'}
                       </span>
                     )}
                   </div>
                 </div>
+              </div>
 
-                <div className="flex items-center justify-end mb-6">
-                  <div className="px-4 py-1.5 bg-red-50 text-red-600 rounded-full text-sm font-medium flex items-center gap-2">
-                    <Clock className="w-4 h-4" />
-                    {formatLocalTime(pool.collection_end)}
-                  </div>
-                </div>
-
-                <div className="bg-lime-50 rounded-xl p-4 mb-6 flex justify-between items-center">
-                  <span className="text-sm text-lime-900 font-medium">Delivery Fee</span>
-                  <span className="text-lg font-bold text-lime-700">₹{pool.delivery_fee_per_order / 100}</span>
+              <div className="p-6 pt-0 mt-auto">
+                <div className="flex items-center justify-between mb-6 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                  <span className="text-sm text-gray-500 font-medium">Delivery Fee</span>
+                  <span className="text-lg font-bold text-gray-900">₹{pool.delivery_fee_per_order / 100}</span>
                 </div>
 
                 <button
                   onClick={() => navigate(`/pool/${pool.id}`)}
-                  className="w-full py-3.5 bg-lime-500 text-white rounded-xl font-bold hover:bg-lime-600 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-lime-200"
+                  className="w-full py-4 bg-primary text-white rounded-2xl font-bold hover:bg-primary-dark transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:shadow-primary/40 active:scale-[0.98]"
                 >
                   Browse Restaurants <ArrowRight className="w-5 h-5" />
                 </button>

@@ -45,7 +45,7 @@ const Home: React.FC = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-lime-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -56,7 +56,7 @@ const Home: React.FC = () => {
         <p>{error}</p>
         <button 
           onClick={() => window.location.reload()} 
-          className="mt-4 px-4 py-2 bg-lime-600 text-white rounded hover:bg-lime-700"
+          className="mt-4 px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark"
         >
           Retry
         </button>
@@ -65,20 +65,25 @@ const Home: React.FC = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="text-center mb-12">
-        <div className="inline-flex items-center justify-center w-12 h-12 bg-lime-100 rounded-full mb-6">
-          <MapPin className="w-6 h-6 text-lime-600" />
+    <div className="max-w-6xl mx-auto px-4 py-12">
+      <div className="mb-16 relative overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl p-8 md:p-12 shadow-xl text-white text-center">
+        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-white/5 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-primary/20 rounded-full blur-2xl"></div>
+        
+        <div className="relative z-10 flex flex-col items-center justify-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-white/10 backdrop-blur-md rounded-full mb-6 shadow-inner border border-white/10 animate-in zoom-in duration-500">
+            <MapPin className="w-8 h-8 text-primary-light" />
+          </div>
+          <h1 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight">
+            Where are you <span className="text-primary-light">ordering from?</span>
+          </h1>
+          <p className="text-lg text-gray-300 max-w-2xl mx-auto leading-relaxed">
+            Select your campus to join active food pools, save on delivery fees, and eat together.
+          </p>
         </div>
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">
-          Where are you <span className="text-lime-600">ordering from?</span>
-        </h1>
-        <p className="text-lg text-gray-500 max-w-2xl mx-auto">
-          Select your campus to join active food pools, save on delivery fees, and eat together.
-        </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {sortedCampuses.map((campus) => {
           const isOperational = OPERATIONAL_CAMPUS_CODES.includes(campus.code);
           const hasActivePools = isOperational || (campus.activePoolCount || 0) > 0;
@@ -88,27 +93,26 @@ const Home: React.FC = () => {
               <button
                 key={campus.id}
                 onClick={() => handleCampusSelect(campus.id)}
-                className="flex items-center p-6 bg-white rounded-2xl shadow-sm hover:shadow-md border border-gray-100 transition-all group text-left"
+                className="flex items-center p-6 bg-gradient-to-br from-white to-green-50/50 rounded-3xl shadow-md hover:shadow-xl border border-green-200 hover:border-green-500 transition-all duration-300 group text-left hover:-translate-y-1 relative overflow-hidden"
               >
-                <div className="p-4 bg-gray-50 rounded-xl group-hover:bg-gray-100 transition-colors mr-5">
-                  <Building2 className="w-8 h-8 text-gray-400 group-hover:text-gray-600" />
+                <div className="absolute top-0 right-0 w-32 h-32 bg-green-100/20 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-green-100/40 transition-colors"></div>
+                <div className="p-4 bg-gray-50 rounded-2xl group-hover:bg-primary-light group-hover:text-primary transition-colors mr-5 flex-shrink-0">
+                  <Building2 className="w-8 h-8 text-gray-400 group-hover:text-primary transition-colors" />
                 </div>
-                <div className="flex-grow">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-bold text-lg text-gray-900 mb-1">{campus.name}</h3>
-                      <div className="flex items-center text-gray-500 text-sm mb-3">
-                        <MapPin className="w-3 h-3 mr-1" />
-                        {campus.hotspotLocation}
-                      </div>
-                    </div>
-                    <ArrowRight className="w-5 h-5 text-gray-300 group-hover:text-lime-600 transition-colors" />
+                <div className="flex-grow min-w-0">
+                  <div className="flex justify-between items-start mb-1">
+                    <h3 className="font-bold text-lg text-gray-900 truncate pr-2">{campus.name}</h3>
+                    <ArrowRight className="w-5 h-5 text-gray-300 group-hover:text-primary transition-colors flex-shrink-0 transform group-hover:translate-x-1" />
                   </div>
-                  <div className="inline-flex items-center px-2.5 py-1 rounded-full bg-lime-50 text-lime-700 text-xs font-medium">
-                    <span className="w-1.5 h-1.5 rounded-full bg-lime-500 mr-1.5"></span>
+                  <div className="flex items-center text-gray-500 text-sm mb-4 truncate">
+                    <MapPin className="w-3.5 h-3.5 mr-1.5 flex-shrink-0" />
+                    <span className="truncate">{campus.hotspotLocation}</span>
+                  </div>
+                  <div className="inline-flex items-center px-3 py-1 rounded-full bg-primary-light text-primary-dark text-xs font-bold uppercase tracking-wide">
+                    <span className="w-2 h-2 rounded-full bg-primary mr-2 animate-pulse"></span>
                     {campus.activePoolCount && campus.activePoolCount > 0 
                       ? `${campus.activePoolCount} Active Pool${campus.activePoolCount === 1 ? '' : 's'}`
-                      : 'No active pools'}
+                      : 'Pools Active'}
                   </div>
                 </div>
               </button>
@@ -118,33 +122,30 @@ const Home: React.FC = () => {
           return (
             <div
               key={campus.id}
-              className="relative flex items-center p-6 bg-white rounded-2xl shadow-sm border border-gray-100 text-left"
+              className="relative flex items-center p-6 bg-white rounded-3xl shadow-sm border border-gray-50 text-left opacity-70 hover:opacity-100 transition-opacity"
               aria-disabled="true"
             >
-              <div className="absolute inset-0 rounded-2xl bg-white/30" />
-              <div className="flex items-center w-full blur-[1px] opacity-60">
-                <div className="p-4 bg-gray-50 rounded-xl mr-5">
-                  <Building2 className="w-8 h-8 text-gray-400" />
+              <div className="flex items-center w-full opacity-50 blur-[0.5px]">
+                <div className="p-4 bg-gray-50 rounded-2xl mr-5 flex-shrink-0">
+                  <Building2 className="w-8 h-8 text-gray-300" />
                 </div>
-                <div className="flex-grow">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-bold text-lg text-gray-900 mb-1">{campus.name}</h3>
-                      <div className="flex items-center text-gray-500 text-sm mb-3">
-                        <MapPin className="w-3 h-3 mr-1" />
-                        {campus.hotspotLocation}
-                      </div>
-                    </div>
-                    <ArrowRight className="w-5 h-5 text-gray-300" />
+                <div className="flex-grow min-w-0">
+                  <div className="flex justify-between items-start mb-1">
+                    <h3 className="font-bold text-lg text-gray-900 truncate pr-2">{campus.name}</h3>
+                    <ArrowRight className="w-5 h-5 text-gray-200" />
                   </div>
-                  <div className="inline-flex items-center px-2.5 py-1 rounded-full bg-gray-100 text-gray-700 text-xs font-medium">
+                  <div className="flex items-center text-gray-400 text-sm mb-4 truncate">
+                    <MapPin className="w-3.5 h-3.5 mr-1.5 flex-shrink-0" />
+                    <span className="truncate">{campus.hotspotLocation}</span>
+                  </div>
+                  <div className="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-400 text-xs font-bold uppercase tracking-wide">
                     Coming soon
                   </div>
                 </div>
               </div>
 
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-gray-200 text-gray-700 text-xs font-medium shadow-sm">
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-gray-100 text-gray-500 text-xs font-bold shadow-sm">
                   <Lock className="w-3.5 h-3.5" />
                   Coming soon
                 </div>

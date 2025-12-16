@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Minus, ArrowLeft, Clock, Truck, Trash2, Loader2, X } from 'lucide-react';
+import { Plus, Minus, ArrowLeft, Clock, Truck, Trash2, X } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { createOrder, getPoolDetails } from '../services/api';
 import type { Pool } from '../types';
@@ -99,26 +99,26 @@ const Cart: React.FC = () => {
   // Show skeleton when syncing pending operations
   if (syncing || (loading && cart.items.length === 0)) {
     return (
-      <div className="max-w-5xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow-md p-6 animate-pulse">
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        <div className="bg-white rounded-3xl shadow-soft p-8 animate-pulse">
           {/* Header skeleton */}
-          <div className="h-8 bg-gray-200 rounded w-1/3 mb-6"></div>
+          <div className="h-10 bg-gray-100 rounded-xl w-1/3 mb-8"></div>
           
           {/* Items skeleton */}
           {[1, 2, 3].map((i) => (
-            <div key={i} className="flex gap-4 mb-4 pb-4 border-b">
-              <div className="w-20 h-20 bg-gray-200 rounded"></div>
+            <div key={i} className="flex gap-6 mb-6 pb-6 border-b border-gray-50">
+              <div className="w-24 h-24 bg-gray-100 rounded-2xl"></div>
               <div className="flex-1">
-                <div className="h-5 bg-gray-200 rounded w-2/3 mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                <div className="h-6 bg-gray-100 rounded-lg w-2/3 mb-3"></div>
+                <div className="h-4 bg-gray-100 rounded-lg w-1/4"></div>
               </div>
-              <div className="h-8 bg-gray-200 rounded w-24"></div>
+              <div className="h-10 bg-gray-100 rounded-xl w-28"></div>
             </div>
           ))}
           
           {/* Total skeleton */}
-          <div className="mt-6 pt-4 border-t">
-            <div className="h-6 bg-gray-200 rounded w-1/4 ml-auto"></div>
+          <div className="mt-8 pt-6 border-t border-gray-50">
+            <div className="h-8 bg-gray-100 rounded-xl w-1/4 ml-auto"></div>
           </div>
         </div>
       </div>
@@ -127,12 +127,15 @@ const Cart: React.FC = () => {
 
   if (cart.items.length === 0) {
     return (
-      <div className="text-center py-16">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Your cart is empty</h2>
-        <p className="text-gray-500 mb-8">Add some delicious food from the pools!</p>
+      <div className="text-center py-20">
+        <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
+          <div className="w-12 h-12 border-2 border-gray-300 rounded-xl border-dashed"></div>
+        </div>
+        <h2 className="text-3xl font-bold text-gray-900 mb-4">Your cart is empty</h2>
+        <p className="text-gray-500 mb-8 text-lg">Add some delicious food from the pools!</p>
         <button
           onClick={() => navigate('/')}
-          className="px-6 py-3 bg-lime-500 text-white rounded-xl font-bold hover:bg-lime-600 transition-colors"
+          className="px-8 py-4 bg-primary text-white rounded-2xl font-bold hover:bg-primary-dark transition-all shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-1"
         >
           Browse Pools
         </button>
@@ -141,7 +144,7 @@ const Cart: React.FC = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
           <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
@@ -151,107 +154,109 @@ const Cart: React.FC = () => {
             <h1 className="text-3xl font-bold text-gray-900">Your Cart</h1>
             <div className="flex items-center gap-2 text-sm mt-1">
               <span className="text-gray-500">Pool:</span>
-              <span className="font-medium text-lime-600">{pool?.name}</span>
+              <span className="font-bold text-primary">{pool?.name}</span>
             </div>
           </div>
         </div>
-        <span className="px-4 py-1.5 bg-lime-100 text-lime-700 rounded-full text-xs font-bold uppercase tracking-wider border border-lime-200">
+        <span className="px-4 py-1.5 bg-primary-light text-primary-dark rounded-full text-xs font-bold uppercase tracking-wider border border-primary/10">
           POOLING ACTIVE
         </span>
       </div>
 
-      <div className="bg-green-50 border border-green-100 rounded-2xl p-6 mb-8 flex flex-col md:flex-row gap-8 items-center shadow-sm">
+      <div className="bg-white border border-gray-100 rounded-3xl p-6 mb-8 flex flex-col md:flex-row gap-8 items-center shadow-soft">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center text-red-500">
+          <div className="w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center text-red-500">
             <Clock className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-0.5">POOL CLOSES</p>
-            <p className="font-bold text-gray-900 text-lg leading-none mb-1">{pool ? formatLocalTime(pool.collection_end) : '...'}</p>
-            <p className="text-xs text-gray-500">Last chance to order</p>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">POOL CLOSES</p>
+            <p className="font-bold text-gray-900 text-xl leading-none mb-1">{pool ? formatLocalTime(pool.collection_end) : '...'}</p>
+            <p className="text-xs text-gray-500 font-medium">Last chance to order</p>
           </div>
         </div>
-        <div className="hidden md:block w-px h-12 bg-green-200"></div>
+        <div className="hidden md:block w-px h-12 bg-gray-100"></div>
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-600">
+          <div className="w-12 h-12 bg-primary-light rounded-2xl flex items-center justify-center text-primary-dark">
             <Truck className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-0.5">EXPECTED DELIVERY</p>
-            <p className="font-bold text-gray-900 text-lg leading-none mb-1">{pool ? formatLocalTime(pool.expected_delivery_time) : '...'}</p>
-            <p className="text-xs text-gray-500">Food arrives at</p>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">EXPECTED DELIVERY</p>
+            <p className="font-bold text-gray-900 text-xl leading-none mb-1">{pool ? formatLocalTime(pool.expected_delivery_time) : '...'}</p>
+            <p className="text-xs text-gray-500 font-medium">Food arrives at</p>
           </div>
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-8">
+      <div className="flex flex-col lg:flex-row gap-8 relative">
         {/* Cart Items */}
-        <div className="flex-grow space-y-6">
+        <div className="flex-grow space-y-6 min-w-0">
           {Object.entries(itemsByRestaurant).map(([restaurantId, items]) => {
             const restaurantName = items[0]?.restaurantName || 'Restaurant';
             const restaurantSubtotal = items.reduce((sum, it) => sum + it.price * it.quantity, 0);
 
             return (
-            <div key={restaurantId} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="bg-gray-50 px-6 py-4 border-b border-gray-100">
+            <div key={restaurantId} className="bg-white rounded-3xl shadow-soft border border-gray-50 overflow-hidden">
+              <div className="bg-gray-50/50 px-8 py-5 border-b border-gray-50">
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
-                    <h3 className="font-bold text-gray-900 text-lg truncate">{restaurantName}</h3>
-                    <p className="text-sm text-gray-500">{items.length} item{items.length !== 1 ? 's' : ''}</p>
+                    <h3 className="font-bold text-gray-900 text-xl truncate">{restaurantName}</h3>
+                    <p className="text-sm text-gray-500 font-medium">{items.length} item{items.length !== 1 ? 's' : ''}</p>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <p className="text-xs text-gray-500">Subtotal</p>
-                    <p className="font-bold text-gray-900">₹{restaurantSubtotal / 100}</p>
+                    <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Subtotal</p>
+                    <p className="font-bold text-gray-900 text-lg">₹{restaurantSubtotal / 100}</p>
                   </div>
                 </div>
               </div>
-              <div className="p-6">
+              <div className="p-8">
                 {items.map((item) => (
-                  <div key={item.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-4 sm:py-6 border-b border-gray-50 last:border-0 last:pb-0 first:pt-0">
-                    <div className="flex items-start sm:items-center gap-3 sm:gap-4 flex-1 min-w-0">
-                      <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0 border border-gray-100">
+                  <div key={item.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 py-6 border-b border-gray-50 last:border-0 last:pb-0 first:pt-0">
+                    <div className="flex items-start sm:items-center gap-4 sm:gap-6 flex-1 min-w-0">
+                      <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gray-100 rounded-2xl overflow-hidden flex-shrink-0 border border-gray-100 relative">
                         {item.dish.image ? (
                           <img src={item.dish.image} alt={item.dish.name} className="w-full h-full object-cover" />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">No Image</div>
+                          <div className="w-full h-full flex items-center justify-center text-gray-300">
+                            <div className="w-8 h-8 rounded-full border-2 border-current opacity-20"></div>
+                          </div>
                         )}
+                        <div className="absolute top-1 left-1">
+                           {item.dish.veg ? (
+                              <div className="w-4 h-4 bg-white rounded-md flex items-center justify-center shadow-sm">
+                                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                              </div>
+                            ) : (
+                              <div className="w-4 h-4 bg-white rounded-md flex items-center justify-center shadow-sm">
+                                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                              </div>
+                            )}
+                        </div>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          {item.dish.veg ? (
-                            <span className="w-4 h-4 border border-green-600 flex items-center justify-center p-0.5 rounded-sm flex-shrink-0">
-                              <span className="w-2 h-2 bg-green-600 rounded-full"></span>
-                            </span>
-                          ) : (
-                            <span className="w-4 h-4 border border-red-600 flex items-center justify-center p-0.5 rounded-sm flex-shrink-0">
-                              <span className="w-2 h-2 bg-red-600 rounded-full"></span>
-                            </span>
-                          )}
-                          <h4 className="font-bold text-gray-900 text-base sm:text-lg truncate">{item.dish.name}</h4>
-                        </div>
-                        <p className="font-bold text-gray-900 text-base sm:text-lg">₹{item.price / 100}</p>
+                        <h4 className="font-bold text-gray-900 text-lg mb-1 truncate">{item.dish.name}</h4>
+                        <p className="font-bold text-gray-500 text-base">₹{item.price / 100}</p>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto pl-[4.75rem] sm:pl-0">
-                      <div className="flex items-center bg-gray-50 rounded-lg border border-gray-200 h-9 sm:h-10">
+                    <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto pl-[6.5rem] sm:pl-0">
+                      <div className="flex items-center bg-white rounded-xl border border-gray-200 h-10 shadow-sm">
                         <button
                           onClick={() => updateQuantity(item.id, Math.max(0, item.quantity - 1))}
-                          className="w-8 sm:w-10 h-full flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-l-lg transition-colors"
+                          className="w-10 h-full flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-l-xl transition-colors"
                         >
-                          <Minus className="w-3 h-3 sm:w-4 sm:h-4" />
+                          <Minus className="w-4 h-4" />
                         </button>
-                        <span className="w-8 text-center font-bold text-gray-900 text-sm sm:text-base">{item.quantity}</span>
+                        <span className="w-8 text-center font-bold text-gray-900 text-base">{item.quantity}</span>
                         <button
                           onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                          className="w-8 sm:w-10 h-full flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-r-lg transition-colors"
+                          className="w-10 h-full flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-r-xl transition-colors"
                         >
-                          <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
+                          <Plus className="w-4 h-4" />
                         </button>
                       </div>
                       <button
                         onClick={() => removeFromCart(item.id)}
-                        className="text-gray-400 hover:text-red-500 transition-colors p-2 hover:bg-red-50 rounded-lg"
+                        className="text-gray-300 hover:text-red-500 transition-colors p-2 hover:bg-red-50 rounded-xl"
                       >
                         <Trash2 className="w-5 h-5" />
                       </button>
@@ -265,27 +270,27 @@ const Cart: React.FC = () => {
         </div>
 
         {/* Order Summary */}
-        <div className="lg:w-96 flex-shrink-0">
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sticky top-24">
-            <h3 className="text-xl font-bold text-gray-900 mb-6">Order Summary</h3>
+        <div className="lg:w-[24rem] flex-shrink-0">
+          <div className="bg-white rounded-3xl shadow-soft border border-gray-50 p-8 sticky top-24">
+            <h3 className="text-2xl font-bold text-gray-900 mb-8">Order Summary</h3>
             
-            <div className="space-y-4 mb-6">
-              <div className="flex justify-between text-gray-600">
+            <div className="space-y-4 mb-8">
+              <div className="flex justify-between text-gray-500 font-medium">
                 <span>Item Total</span>
-                <span>₹{cartTotal / 100}</span>
+                <span className="text-gray-900">₹{cartTotal / 100}</span>
               </div>
-              <div className="flex justify-between text-gray-600">
-                <span>Delivery Fee <span className="text-lime-600 text-xs font-bold">(Pool)</span></span>
-                <span>₹{deliveryFee / 100}</span>
+              <div className="flex justify-between text-gray-500 font-medium">
+                <span>Delivery Fee <span className="text-primary text-xs font-bold bg-primary-light px-1.5 py-0.5 rounded ml-1">POOL</span></span>
+                <span className="text-gray-900">₹{deliveryFee / 100}</span>
               </div>
-              <div className="h-px bg-gray-100 my-4"></div>
+              <div className="h-px bg-gray-100 my-6"></div>
               <div className="flex justify-between items-center">
                 <span className="text-xl font-bold text-gray-900">Total</span>
-                <span className="text-2xl font-bold text-gray-900">₹{totalAmount / 100}</span>
+                <span className="text-3xl font-bold text-primary">₹{totalAmount / 100}</span>
               </div>
             </div>
 
-            <div className="bg-gray-50 rounded-xl p-4 mb-6 text-center text-sm text-gray-600 border border-gray-100">
+            <div className="bg-gray-50 rounded-2xl p-4 mb-8 text-center text-sm text-gray-500 border border-gray-100 font-medium">
               {restaurantNames.length > 0
                 ? `Ordering from: ${restaurantNames.join(', ')}`
                 : `Ordering from ${Object.keys(itemsByRestaurant).length} restaurant${Object.keys(itemsByRestaurant).length !== 1 ? 's' : ''}`}
@@ -294,12 +299,12 @@ const Cart: React.FC = () => {
             <button
               onClick={handleProceedToPay}
               disabled={isSubmitting}
-              className="w-full py-4 bg-lime-500 text-white rounded-xl font-bold text-lg hover:bg-lime-600 transition-colors shadow-lg shadow-lime-200 disabled:opacity-50 disabled:cursor-not-allowed mb-4"
+              className="w-full py-4 bg-primary text-white rounded-2xl font-bold text-lg hover:bg-primary-dark transition-all shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed mb-4"
             >
               {isSubmitting ? 'Processing...' : 'Proceed to Pay'}
             </button>
 
-            <p className="text-xs text-center text-gray-400">
+            <p className="text-xs text-center text-gray-400 font-medium">
               By proceeding, you agree to our Terms of Service.
             </p>
           </div>
@@ -308,47 +313,52 @@ const Cart: React.FC = () => {
 
       {/* Payment Confirmation Modal */}
       {showPaymentModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
-            <div className="flex items-start justify-between mb-4">
-              <h3 className="text-xl font-bold text-gray-900">Payment Method</h3>
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="flex items-start justify-between mb-6">
+              <h3 className="text-2xl font-bold text-gray-900">Payment Method</h3>
               <button
                 onClick={() => setShowPaymentModal(false)}
-                className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
               >
-                <X className="w-5 h-5 text-gray-500" />
+                <X className="w-5 h-5 text-gray-400" />
               </button>
             </div>
             
-            <div className="mb-6">
-              <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-4">
-                <p className="text-sm text-yellow-800 font-medium mb-2">💰 Cash on Delivery</p>
-                <p className="text-sm text-yellow-700">
+            <div className="mb-8">
+              <div className="bg-accent-light border border-accent/20 rounded-2xl p-5 mb-6">
+                <p className="text-sm text-yellow-800 font-bold mb-2 flex items-center gap-2">
+                  <span className="text-lg">💰</span> Cash on Delivery
+                </p>
+                <p className="text-sm text-yellow-700/90 leading-relaxed">
                   We currently accept <span className="font-bold">Cash</span> or <span className="font-bold">UPI payment on delivery</span> only.
                 </p>
               </div>
               
-              <p className="text-gray-700 text-sm mb-4">
+              <p className="text-gray-600 text-sm mb-6 leading-relaxed">
                 By clicking "Confirm Order", your order will be placed and you can pay when your food arrives at the delivery hotspot.
               </p>
               
-              <div className="bg-gray-50 rounded-lg p-3 text-sm text-gray-600">
-                <p className="font-semibold text-gray-900 mb-1">Order Total: ₹{totalAmount / 100}</p>
-                <p className="text-xs">Please keep exact change or UPI ready for payment.</p>
+              <div className="bg-gray-50 rounded-2xl p-4 text-sm text-gray-600 border border-gray-100">
+                <div className="flex justify-between items-center mb-1">
+                   <span className="font-medium">Order Total</span>
+                   <span className="font-bold text-gray-900 text-lg">₹{totalAmount / 100}</span>
+                </div>
+                <p className="text-xs text-gray-400">Please keep exact change or UPI ready.</p>
               </div>
             </div>
             
-            <div className="flex gap-3">
+            <div className="flex gap-4">
               <button
                 onClick={() => setShowPaymentModal(false)}
-                className="flex-1 py-3 px-4 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
+                className="flex-1 py-3.5 px-4 border border-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleConfirmOrder}
                 disabled={isSubmitting}
-                className="flex-1 py-3 px-4 bg-lime-500 text-white rounded-xl font-bold hover:bg-lime-600 transition-colors shadow-lg shadow-lime-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 py-3.5 px-4 bg-primary text-white rounded-xl font-bold hover:bg-primary-dark transition-all shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? 'Placing...' : 'Confirm Order'}
               </button>

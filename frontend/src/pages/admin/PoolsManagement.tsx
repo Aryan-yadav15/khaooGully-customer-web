@@ -148,11 +148,11 @@ const PoolsManagement: React.FC = () => {
   };
 
   return (
-    <div className="p-8">
-      <div className="flex justify-between items-center mb-8">
+    <div className="max-w-7xl mx-auto px-4 py-8 pb-24">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Pools Management</h1>
-          <p className="text-gray-500 text-sm mt-1">Manage active food pools and deliveries</p>
+          <h1 className="text-3xl font-bold text-gray-900">Pools Management</h1>
+          <p className="text-gray-500 mt-1">Manage active food pools and deliveries</p>
         </div>
         <button
           onClick={() => {
@@ -160,79 +160,79 @@ const PoolsManagement: React.FC = () => {
             resetForm();
             setIsModalOpen(true);
           }}
-          className="bg-lime-500 text-white px-4 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:bg-lime-600 transition-colors shadow-lg shadow-lime-200"
+          className="bg-gradient-to-r from-lime-500 to-green-600 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:shadow-lg hover:shadow-lime-500/30 transition-all active:scale-95"
         >
           <Plus className="w-5 h-5" /> Create Pool
         </button>
       </div>
 
-      <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="p-4 border-b border-gray-100 flex gap-4">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+      <div className="bg-white rounded-[2rem] shadow-soft border border-gray-100 overflow-hidden">
+        <div className="p-6 border-b border-gray-100 flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input 
               type="text" 
               placeholder="Search pools..." 
-              className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-lime-500"
+              className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-lime-500/50 focus:border-lime-500 transition-all"
             />
           </div>
-          <button className="px-4 py-2 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 flex items-center gap-2">
+          <button className="px-6 py-3 border border-gray-200 rounded-2xl text-sm font-bold text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors">
             <Filter className="w-4 h-4" /> Filter
           </button>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left">
-            <thead className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider font-bold">
+            <thead className="bg-gray-50/50 text-gray-400 text-xs uppercase tracking-wider font-bold">
               <tr>
-                <th className="px-6 py-4">Pool Name</th>
-                <th className="px-6 py-4">Campus</th>
-                <th className="px-6 py-4">Timing</th>
-                <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4 text-right">Actions</th>
+                <th className="px-8 py-5">Pool Name</th>
+                <th className="px-6 py-5">Campus</th>
+                <th className="px-6 py-5">Timing</th>
+                <th className="px-6 py-5">Status</th>
+                <th className="px-8 py-5 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-50">
               {pools.map((pool) => (
-                <tr key={pool.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4">
-                    <div className="font-bold text-gray-900">{pool.name}</div>
-                    <div className="text-xs text-gray-500">{(pool.participating_restaurants || []).length} Restaurants</div>
+                <tr key={pool.id} className="hover:bg-gray-50/80 transition-colors group">
+                  <td className="px-8 py-5">
+                    <div className="font-bold text-gray-900 text-base">{pool.name}</div>
+                    <div className="text-xs font-medium text-gray-500 mt-0.5">{(pool.participating_restaurants || []).length} Restaurants</div>
                   </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <td className="px-6 py-5">
+                    <div className="flex items-center gap-2 text-sm font-medium text-gray-600">
                       <MapPin className="w-4 h-4 text-gray-400" />
                       {campuses.find(c => c.id === pool.campus_id)?.name || 'Unknown'}
                     </div>
                   </td>
-                  <td className="px-6 py-4">
-                    <div className="flex flex-col gap-1 text-xs text-gray-600">
+                  <td className="px-6 py-5">
+                    <div className="flex flex-col gap-1.5 text-xs font-medium text-gray-600">
                       <div className="flex items-center gap-2">
-                        <Clock className="w-3 h-3" />
+                        <Clock className="w-3.5 h-3.5 text-gray-400" />
                         Ends: {new Date(pool.collection_end).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                       </div>
-                      <div className="flex items-center gap-2 text-green-600 font-medium">
-                        <Truck className="w-3 h-3" />
+                      <div className="flex items-center gap-2 text-green-600">
+                        <Truck className="w-3.5 h-3.5" />
                         Delivers: {new Date(pool.expected_delivery_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${
+                  <td className="px-6 py-5">
+                    <span className={`px-3 py-1.5 rounded-lg text-[11px] font-black tracking-wide border ${
                       (pool.computed_status || pool.manual_status) === 'open' ? 'bg-green-100 text-green-700 border-green-200' :
-                      (pool.computed_status || pool.manual_status) === 'closed' ? 'bg-red-100 text-red-700 border-red-200' :
-                      (pool.computed_status || pool.manual_status) === 'scheduled' ? 'bg-blue-100 text-blue-700 border-blue-200' :
-                      'bg-gray-100 text-gray-700 border-gray-200'
+                      (pool.computed_status || pool.manual_status) === 'closed' ? 'bg-red-50 text-red-600 border-red-100' :
+                      (pool.computed_status || pool.manual_status) === 'scheduled' ? 'bg-blue-50 text-blue-600 border-blue-100' :
+                      'bg-gray-100 text-gray-600 border-gray-200'
                     }`}>
                       {(pool.computed_status || pool.manual_status || 'unknown').toUpperCase()}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end gap-2">
+                  <td className="px-8 py-5 text-right">
+                    <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       {(pool.computed_status === 'closed' && pool.manual_status !== 'closed' && pool.manual_status !== 'synced') && (
                         <button
                           onClick={() => handleClosePool(pool)}
-                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
                           title="Persist CLOSED status"
                         >
                           <Ban className="w-4 h-4" />
@@ -240,13 +240,13 @@ const PoolsManagement: React.FC = () => {
                       )}
                       <button
                         onClick={() => handleEdit(pool)}
-                        className="p-2 text-gray-400 hover:text-lime-600 hover:bg-lime-50 rounded-lg transition-colors"
+                        className="p-2 text-gray-400 hover:text-lime-600 hover:bg-lime-50 rounded-xl transition-colors"
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(pool.id)}
-                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>

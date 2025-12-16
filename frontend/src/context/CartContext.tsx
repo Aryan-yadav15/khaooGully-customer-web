@@ -61,9 +61,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { user } = useAuth();
 
   const refreshInFlightRef = useRef<{ poolId: string; promise: Promise<void> } | null>(null);
-  const desiredQuantityRef = useRef<Record<string, number>>({});
   const pendingOperationsRef = useRef<Map<string, PendingOperation>>(new Map());
-  const syncTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const syncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inFlightSyncRef = useRef<Promise<void> | null>(null);
 
   const makeDesiredKey = (poolId: string, restaurantId: string, dishId: string) => `${poolId}:${restaurantId}:${dishId}`;
@@ -85,6 +84,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const operations = Array.from(pendingOperationsRef.current.values());
     if (operations.length === 0) return;
 
+    console.log(`[CartSync] Starting sync of ${operations.length} operations`);
+
     const syncPromise = (async () => {
       setSyncing(true);
       const errors: string[] = [];
@@ -100,44 +101,66 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (!existing || op.type === 'remove') {
             consolidatedOps.set(key, op);
           } else if (op.type === 'add' && existing.type === 'add') {
-            // Combine multiple adds
-            existing.quantity += op.quantity;
+            // Combine multiple adds of same item
+            consolidatedOps.set(key, { ...existing, quantity: existing.quantity + op.quantity });
           } else if (op.type === 'update') {
             // Update takes precedence
             consolidatedOps.set(key, op);
           }
         }
 
-        // Execute consolidated operations
+        console.log(`[CartSync] Consolidated to ${consolidatedOps.size} operations`);
+
+        // Execute all operations in parallel
+        const promises = [];
         for (const [key, op] of consolidatedOps) {
-          try {
-            if (op.type === 'add' && op.dish) {
-              await api.addToCart(op.poolId, op.restaurantId, op.dishId, op.quantity);
-            } else if (op.type === 'update' && op.itemId) {
-              if (op.quantity <= 0) {
+          const promise = (async () => {
+            try {
+              console.log(`[CartSync] Syncing ${op.type} for dish ${op.dishId}, qty: ${op.quantity}`);
+              
+              if (op.type === 'add' && op.dish) {
+                await api.addToCart(op.poolId, op.restaurantId, op.dishId, op.quantity);
+                console.log(`[CartSync] ✓ Added ${op.dishId}`);
+              } else if (op.type === 'update' && op.itemId) {
+                if (op.quantity <= 0) {
+                  await api.removeCartItem(op.itemId);
+                  console.log(`[CartSync] ✓ Removed ${op.itemId}`);
+                } else {
+                  await api.updateCartItem(op.itemId, op.quantity);
+                  console.log(`[CartSync] ✓ Updated ${op.itemId}`);
+                }
+              } else if (op.type === 'remove' && op.itemId) {
                 await api.removeCartItem(op.itemId);
-              } else {
-                await api.updateCartItem(op.itemId, op.quantity);
+                console.log(`[CartSync] ✓ Removed ${op.itemId}`);
               }
-            } else if (op.type === 'remove' && op.itemId) {
-              await api.removeCartItem(op.itemId);
+              
+              // Remove from pending after successful sync
+              pendingOperationsRef.current.delete(key);
+            } catch (error) {
+              console.error(`[CartSync] ✗ Failed to sync ${key}:`, error);
+              errors.push(key);
             }
-            
-            // Remove from pending after successful sync
-            pendingOperationsRef.current.delete(key);
-          } catch (error) {
-            console.error(`Failed to sync operation for ${key}:`, error);
-            errors.push(key);
-          }
+          })();
+          promises.push(promise);
         }
+
+        // Wait for ALL operations to complete before refreshing
+        console.log(`[CartSync] Waiting for ${promises.length} promises...`);
+        await Promise.all(promises);
+        console.log(`[CartSync] All operations completed`);
+
+        // Small delay to ensure backend has fully processed
+        await new Promise(resolve => setTimeout(resolve, 200));
 
         // Refresh cart to get the final state from server
         if (cart.poolId) {
+          console.log(`[CartSync] Refreshing cart...`);
           await refreshCart(cart.poolId);
+          console.log(`[CartSync] Cart refreshed successfully`);
         }
 
         if (errors.length > 0) {
-          console.warn('Some operations failed to sync:', errors);
+          console.warn('[CartSync] Some operations failed:', errors);
         }
       } finally {
         setSyncing(false);

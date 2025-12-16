@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ChevronRight, ShoppingCart, User, LogOut } from 'lucide-react';
+import { ChevronRight, ShoppingCart, User, LogOut, Home, ShoppingBag, Menu, X, ShieldCheck } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { getCustomerOrders } from '../../services/api';
@@ -10,6 +10,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { itemCount, cartTotal, syncing, hasPendingOperations } = useCart();
   const { user, isAdmin, signOut } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [activeOrder, setActiveOrder] = useState<CustomerOrderHistoryItem | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -76,127 +77,251 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const needsBottomPadding = showIncomingOrderFooter || showMenuCartFooter;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <header className="bg-white border-b border-gray-100 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="bg-black rounded-md">
-               <img src="/LogoCircle.svg" alt="Khaoo Gully" className="w-12 h-12" />
+    <div className="min-h-screen bg-gray-50 flex flex-col font-sans selection:bg-primary-light selection:text-primary-dark">
+      {/* Floating Navbar */}
+      <header className="sticky top-4 z-50 px-4 md:px-6 mb-2">
+        <div className="max-w-7xl mx-auto bg-white/90 backdrop-blur-md border border-white/40 shadow-soft rounded-2xl px-4 py-3 flex items-center justify-between transition-all duration-300 hover:shadow-lg hover:bg-white/95">
+          
+          {/* Logo Section */}
+          <Link to="/" className="flex items-center gap-3 group">
+            <div className="bg-black text-white rounded-xl p-1.5 shadow-sm group-hover:scale-105 transition-transform duration-300">
+               <img src="/LogoCircle.svg" alt="Khaoo Gully" className="w-9 h-9" />
             </div>
-            <span className="text-xl font-bold text-gray-900">Khaoo Gully</span>
+            <span className="text-xl font-bold text-gray-900 tracking-tight group-hover:text-primary transition-colors">
+              Khaoo Gully
+            </span>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-8">
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center gap-1 bg-gray-100/50 p-1 rounded-xl border border-gray-100">
+            <Link 
+              to="/" 
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
+                location.pathname === '/' 
+                  ? 'bg-white text-primary shadow-sm' 
+                  : 'text-gray-500 hover:text-gray-900 hover:bg-gray-200/50'
+              }`}
+            >
+              <Home className="w-4 h-4" />
+              Home
+            </Link>
+            {user && (
+              <Link 
+                to="/profile" 
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
+                  location.pathname === '/profile'
+                    ? 'bg-white text-primary shadow-sm' 
+                    : 'text-gray-500 hover:text-gray-900 hover:bg-gray-200/50'
+                }`}
+              >
+                <ShoppingBag className="w-4 h-4" />
+                Orders
+              </Link>
+            )}
             {isAdmin && (
-              <Link to="/admin" className="flex items-center text-black hover:text-gray-900 text-sm font-medium">
-                <span className="w-4 h-4"></span>
+              <Link 
+                to="/admin" 
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
+                  location.pathname.startsWith('/admin')
+                    ? 'bg-black text-white shadow-sm' 
+                    : 'text-gray-500 hover:text-black hover:bg-gray-200/50'
+                }`}
+              >
+                <ShieldCheck className="w-4 h-4" />
                 Admin
               </Link>
             )}
           </nav>
 
-          <div className="flex items-center gap-4">
+          {/* Right Actions */}
+          <div className="flex items-center gap-3">
+            {/* Cart Button */}
+            <Link 
+              to="/cart" 
+              className={`relative p-2.5 rounded-xl transition-all duration-200 group ${
+                itemCount > 0 ? 'bg-primary-light/30 text-primary hover:bg-primary-light' : 'text-gray-400 hover:bg-gray-100 hover:text-gray-900'
+              }`}
+            >
+              <ShoppingCart className={`w-5 h-5 ${hasPendingOperations() ? 'animate-pulse' : ''}`} />
+              {itemCount > 0 && (
+                <span className={`absolute -top-1 -right-1 bg-accent text-black text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center border-2 border-white shadow-sm ${syncing ? 'animate-pulse' : ''}`}>
+                  {itemCount}
+                </span>
+              )}
+            </Link>
+
+            {/* User Profile / Sign In */}
             {user ? (
               <div className="relative">
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center text-sm font-medium"
+                  className="flex items-center gap-2 pl-1 pr-1 py-1 rounded-full border border-gray-100 bg-gray-50 hover:bg-white hover:shadow-md transition-all duration-200"
                 >
-                  {user.email?.charAt(0).toUpperCase()}
-                </button>
-                {showUserMenu && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-2">
-                    <div className="px-4 py-2 border-b border-gray-100">
-                      <p className="text-sm font-medium text-gray-900 truncate">{user.email}</p>
-                    </div>
-                    <Link
-                      to="/profile"
-                      onClick={() => setShowUserMenu(false)}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-                    >
-                      <User className="w-4 h-4" />
-                      My Profile
-                    </Link>
-                    <button
-                      onClick={handleSignOut}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      Sign Out
-                    </button>
+                  <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold shadow-sm">
+                    {user.email?.charAt(0).toUpperCase()}
                   </div>
+                  <ChevronRight className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${showUserMenu ? 'rotate-90' : ''}`} />
+                </button>
+
+                {showUserMenu && (
+                  <>
+                    <div className="fixed inset-0 z-30" onClick={() => setShowUserMenu(false)} />
+                    <div className="absolute right-0 mt-3 w-64 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-40">
+                      <div className="px-5 py-4 border-b border-gray-50 bg-gray-50/50">
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Signed in as</p>
+                        <p className="text-sm font-bold text-gray-900 truncate">{user.email}</p>
+                      </div>
+                      <div className="p-2">
+                        <Link
+                          to="/profile"
+                          onClick={() => setShowUserMenu(false)}
+                          className="w-full text-left px-4 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-primary-light hover:text-primary-dark flex items-center gap-3 transition-colors"
+                        >
+                          <User className="w-4 h-4" />
+                          My Profile
+                        </Link>
+                        <Link
+                          to="/profile"
+                          onClick={() => setShowUserMenu(false)}
+                          className="w-full text-left px-4 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-primary-light hover:text-primary-dark flex items-center gap-3 transition-colors"
+                        >
+                          <ShoppingBag className="w-4 h-4" />
+                          My Orders
+                        </Link>
+                        <div className="h-px bg-gray-100 my-1" />
+                        <button
+                          onClick={handleSignOut}
+                          className="w-full text-left px-4 py-3 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 flex items-center gap-3 transition-colors"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          Sign Out
+                        </button>
+                      </div>
+                    </div>
+                  </>
                 )}
               </div>
             ) : (
               <Link
                 to="/login"
-                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-lg text-sm font-medium transition-colors"
+                className="px-5 py-2.5 bg-primary hover:bg-primary-dark text-white rounded-xl text-sm font-bold shadow-lg shadow-primary/20 transition-all hover:shadow-primary/40 hover:-translate-y-0.5 active:translate-y-0"
               >
                 Sign In
               </Link>
             )}
 
-            <Link to="/cart" className="relative p-2 text-gray-400 hover:text-gray-600 transition-colors">
-              <ShoppingCart className={`w-5 h-5 ${hasPendingOperations() ? 'animate-pulse' : ''}`} />
-              {itemCount > 0 && (
-                <span className={`absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center border-2 border-white ${syncing ? 'animate-pulse' : ''}`}>
-                  {itemCount}
-                </span>
-              )}
-            </Link>
+            {/* Mobile Menu Button */}
+            <button 
+              className="md:hidden p-2 text-gray-500 hover:bg-gray-100 rounded-xl"
+              onClick={() => setShowMobileMenu(!showMobileMenu)}
+            >
+              {showMobileMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
           </div>
         </div>
+
+        {/* Mobile Menu Dropdown */}
+        {showMobileMenu && (
+          <div className="md:hidden absolute top-full left-0 right-0 mt-2 mx-4 bg-white rounded-2xl shadow-xl border border-gray-100 p-2 animate-in slide-in-from-top-2 duration-200">
+            <Link 
+              to="/" 
+              onClick={() => setShowMobileMenu(false)}
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium ${
+                location.pathname === '/' ? 'bg-primary-light text-primary' : 'text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <Home className="w-5 h-5" />
+              Home
+            </Link>
+            {user && (
+              <Link 
+                to="/profile" 
+                onClick={() => setShowMobileMenu(false)}
+                className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                <ShoppingBag className="w-5 h-5" />
+                My Orders
+              </Link>
+            )}
+            {isAdmin && (
+              <Link 
+                to="/admin" 
+                onClick={() => setShowMobileMenu(false)}
+                className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                <ShieldCheck className="w-5 h-5" />
+                Admin Dashboard
+              </Link>
+            )}
+          </div>
+        )}
       </header>
 
-      <main className={`flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full ${needsBottomPadding ? 'pb-32' : ''}`}>
+      <main className={`flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 w-full ${needsBottomPadding ? 'pb-32' : ''}`}>
         {children}
       </main>
 
       <footer className="bg-white border-t mt-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-gray-500 text-sm">
-          &copy; {new Date().getFullYear()} KhaoGully. All rights reserved.
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <div className="flex items-center gap-2 opacity-50 grayscale hover:grayscale-0 transition-all">
+              <img src="/LogoCircle.svg" alt="Khaoo Gully" className="w-8 h-8" />
+              <span className="font-bold text-gray-900">Khaoo Gully</span>
+            </div>
+            <p className="text-gray-400 text-sm">
+              &copy; {new Date().getFullYear()} KhaoGully. Made with ❤️ for foodies.
+            </p>
+          </div>
         </div>
       </footer>
 
       {showMenuCartFooter && (
-        <div className={`fixed inset-x-0 ${menuCartFooterBottomClass} z-40 px-4`}>
+        <div className={`fixed inset-x-0 ${menuCartFooterBottomClass} z-40 px-4 animate-in slide-in-from-bottom-4 duration-300`}>
           <button
             onClick={() => navigate('/cart')}
-            className="w-full max-w-3xl mx-auto bg-white border border-gray-200 rounded-2xl shadow-lg px-4 py-3 flex items-center justify-between gap-3 hover:shadow-xl transition-shadow"
+            className="w-full max-w-3xl mx-auto bg-gray-900 text-white rounded-2xl shadow-xl shadow-gray-900/20 px-5 py-4 flex items-center justify-between gap-3 hover:bg-black hover:scale-[1.01] transition-all duration-300 border border-white/10"
           >
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-gray-900 truncate">{itemCount} item{itemCount === 1 ? '' : 's'} added</p>
-              <p className="text-xs text-gray-600 truncate">Subtotal {cartSubtotalText}</p>
+            <div className="min-w-0 flex flex-col items-start">
+              <div className="flex items-center gap-2">
+                <span className="bg-primary text-white px-2 py-0.5 rounded text-xs font-bold">{itemCount} items</span>
+                <p className="text-sm font-bold text-white truncate">View Cart</p>
+              </div>
+              <p className="text-xs text-gray-400 truncate mt-0.5">Subtotal {cartSubtotalText}</p>
             </div>
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <span className="px-3 py-2 rounded-xl bg-lime-600 text-white text-sm font-semibold">View cart</span>
-              <ChevronRight className="w-5 h-5 text-gray-400" />
+            <div className="flex items-center gap-2 flex-shrink-0 bg-white/10 px-3 py-2 rounded-xl backdrop-blur-sm group">
+              <span className="text-sm font-bold group-hover:text-primary transition-colors">Checkout</span>
+              <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </div>
           </button>
         </div>
       )}
 
       {showIncomingOrderFooter && activeOrder && (
-        <div className="fixed inset-x-0 bottom-4 z-50 px-4">
+        <div className="fixed inset-x-0 bottom-6 z-50 px-4 animate-in slide-in-from-bottom-4 duration-500">
           <button
             onClick={() => navigate(`/order/${activeOrder.orderId}`)}
-            className="w-full max-w-3xl mx-auto bg-white border border-gray-200 rounded-2xl shadow-lg px-4 py-3 flex items-center justify-between gap-3 hover:shadow-xl transition-shadow"
+            className="w-full max-w-md mx-auto bg-white/90 backdrop-blur-xl border border-white/50 rounded-3xl shadow-2xl shadow-primary/20 p-4 flex items-center justify-between gap-4 hover:scale-[1.02] transition-all duration-300 group relative overflow-hidden"
           >
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="w-12 h-12 rounded-2xl bg-lime-50 border border-lime-200 flex items-center justify-center flex-shrink-0">
-                <span className="text-lime-700 font-bold text-xs text-center leading-tight px-2">
-                  {orderStatusLabel}
-                </span>
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            
+            <div className="flex items-center gap-4 min-w-0 relative z-10">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center flex-shrink-0 shadow-lg shadow-primary/30 text-white">
+                <ShoppingBag className="w-6 h-6" />
               </div>
               <div className="min-w-0 text-left">
-                <p className="text-sm font-semibold text-gray-900 truncate">Order incoming!</p>
-                <p className="text-xs text-gray-600 truncate">
-                  {activeOrder.poolName || activeOrder.restaurantName}
+                <p className="text-xs font-bold text-primary uppercase tracking-wider mb-0.5 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                  {orderStatusLabel}
+                </p>
+                <p className="text-sm font-bold text-gray-900 truncate">
+                  {activeOrder.poolName || activeOrder.restaurantName || 'Your Order'}
                 </p>
               </div>
             </div>
 
-            <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0" />
+            <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all duration-300 shadow-sm group-hover:shadow-md relative z-10">
+               <ChevronRight className="w-5 h-5" />
+            </div>
           </button>
         </div>
       )}
