@@ -203,7 +203,7 @@ const RestaurantDetails: React.FC = () => {
                         </div>
                         
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-bold text-base md:text-lg text-gray-900 mb-1 leading-tight truncate">{dish.name}</h3>
+                          <h3 className="font-bold text-base md:text-lg text-gray-900 mb-1 leading-tight line-clamp-2 break-words">{dish.name}</h3>
                           <p className="text-xs md:text-sm text-gray-500 line-clamp-2 mb-2 h-8 md:h-10">{dish.description}</p>
                           <div className="flex items-center gap-2">
                              <span className="text-base md:text-lg font-bold text-gray-900">₹{dish.price / 100}</span>

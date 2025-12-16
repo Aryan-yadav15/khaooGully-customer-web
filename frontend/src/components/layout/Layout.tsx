@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ChevronRight, ShoppingCart, User, LogOut, Home, ShoppingBag, ShieldCheck } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
@@ -11,8 +11,25 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isAdmin, signOut } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [activeOrder, setActiveOrder] = useState<CustomerOrderHistoryItem | null>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setShowUserMenu(false);
+      }
+    };
+
+    if (showUserMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showUserMenu]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -151,7 +168,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
             {/* User Profile / Sign In */}
             {user ? (
-              <div className="relative">
+              <div className="relative" ref={userMenuRef}>
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className="flex items-center gap-2 pl-1 pr-1 py-1 rounded-full border border-gray-100 bg-gray-50 hover:bg-white hover:shadow-md transition-all duration-200"
@@ -164,7 +181,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
                 {showUserMenu && (
                   <>
-                    <div className="fixed inset-0 z-30" onClick={() => setShowUserMenu(false)} />
                     <div className="absolute right-0 mt-3 w-64 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-40">
                       <div className="px-5 py-4 border-b border-gray-50 bg-gray-50/50">
                         <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Signed in as</p>
