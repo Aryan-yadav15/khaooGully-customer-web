@@ -199,7 +199,7 @@ const CampusRestaurants: React.FC = () => {
           <p className="text-gray-500">There are no active restaurants matching your search right now.</p>
         </div>
       ) : (
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 md:gap-8 md:grid-cols-2 lg:grid-cols-3">
           {filtered.map((row) => {
             const rest = row.restaurant;
             const isDifferentPool = !!cart.poolId && cart.poolId !== row.poolId && cart.items.length > 0;
@@ -208,9 +208,9 @@ const CampusRestaurants: React.FC = () => {
               <div
                 key={`${row.poolId}-${rest.id}`}
                 onClick={() => handleRestaurantClick(row)}
-                className="bg-white rounded-xl md:rounded-3xl shadow-soft border border-gray-50 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer group flex flex-col h-full"
+                className="bg-white rounded-xl md:rounded-3xl shadow-soft border border-gray-50 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer group flex flex-row md:flex-col h-full items-center md:items-stretch"
               >
-                <div className="h-48 overflow-hidden bg-gray-100 relative">
+                <div className="w-32 h-36 md:w-full md:h-48 overflow-hidden bg-gray-100 relative shrink-0 m-3 md:m-0 rounded-xl md:rounded-none">
                   {rest.image ? (
                     <img
                       src={rest.image}
@@ -224,48 +224,79 @@ const CampusRestaurants: React.FC = () => {
                   ) : null}
                   
                   <div className={`w-full h-full flex items-center justify-center text-gray-300 bg-gray-50 ${rest.image ? 'hidden' : ''}`}>
-                    <Store className="w-16 h-16 opacity-20" />
+                    <Store className="w-10 h-10 md:w-16 md:h-16 opacity-20" />
                   </div>
 
-                  <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-lg md:rounded-xl shadow-sm text-xs font-bold text-gray-800 border border-gray-100">
+                  <div className="hidden md:block absolute top-4 left-4 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-lg md:rounded-xl shadow-sm text-xs font-bold text-gray-800 border border-gray-100">
                     Pool: {row.poolName || row.poolId}
                   </div>
 
                   {isDifferentPool && (
-                    <div className="absolute top-4 right-4 bg-red-500 text-white px-3 py-1.5 rounded-lg md:rounded-xl shadow-sm text-xs font-bold animate-pulse">
+                    <div className="absolute top-2 right-2 md:top-4 md:right-4 bg-red-500 text-white px-2 py-1 md:px-3 md:py-1.5 rounded-lg md:rounded-xl shadow-sm text-[10px] md:text-xs font-bold animate-pulse">
                       Different Pool
                     </div>
                   )}
                 </div>
 
-                <div className="p-6 flex-grow flex flex-col">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-bold text-xl text-gray-900 leading-tight group-hover:text-primary transition-colors">{rest.name}</h3>
-                    <div className="bg-green-50 text-green-700 px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide flex-shrink-0">
-                      {rest.deliveryTime} min
+                <div className="p-3 md:p-6 flex-grow flex flex-col justify-between h-full md:h-auto min-w-0">
+                  {/* Mobile Content Layout */}
+                  <div className="md:hidden flex flex-col gap-1 h-full justify-center">
+                    <h3 className="font-bold text-lg text-gray-900 leading-tight line-clamp-1">{rest.name}</h3>
+                    
+                    <div className="flex items-center gap-1.5 text-sm text-gray-700 font-medium">
+                         <div className="flex items-center justify-center bg-green-600 text-white w-4 h-4 rounded-full">
+                            <Star className="w-2.5 h-2.5 fill-current" />
+                         </div>
+                         <span className="font-bold text-gray-900">{Number(rest.rating) > 0 ? Number(rest.rating).toFixed(1) : 'New'}</span>
+                         <span className="text-gray-400">•</span>
+                         <span className="font-bold text-gray-900">{rest.deliveryTime} mins</span>
                     </div>
-                  </div>
-                  
-                  <div className="flex gap-2 overflow-x-auto pb-2 mb-2 no-scrollbar mask-fade-right">
-                    {(rest.cuisine || []).map((c, i) => (
-                      <span key={i} className="whitespace-nowrap px-2.5 py-1 bg-gray-50 text-gray-600 text-xs font-medium rounded-full border border-gray-100 flex-shrink-0">
-                        {c}
-                      </span>
-                    ))}
-                  </div>
-                  
-                  <div className="mt-auto pt-4 border-t border-gray-50 flex items-center justify-between">
-                    <div className="flex items-center gap-1.5">
-                      <div className="flex items-center gap-1 bg-green-50 px-2 py-1 rounded-lg border border-green-100">
-                        <Star className="w-3.5 h-3.5 text-green-600 fill-green-600" />
-                        <span className="text-xs font-bold text-green-700">{Number(rest.rating) > 0 ? Number(rest.rating).toFixed(1) : 'New'}</span>
+
+                    <p className="text-sm text-gray-500 truncate">
+                        {(rest.cuisine || []).join(', ')}
+                    </p>
+
+                    <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium mt-1">
+                         <span>₹{(rest.costForTwo || 0) / 100} for two</span>
+                    </div>
+                    <div className="mt-2">
+                      <div className="inline-flex items-center px-2.5 py-1 rounded-lg bg-green-50 border border-green-100 shadow-sm">
+                         <span className="text-[10px] font-bold uppercase tracking-wider text-green-600 mr-1.5">Pool</span>
+                         <span className="text-xs font-bold text-gray-900 truncate max-w-[140px]">{row.poolName || row.poolId}</span>
                       </div>
-                      <span className="text-xs text-gray-400 font-medium">•</span>
-                      <span className="text-xs text-gray-500 font-medium">₹{(rest.costForTwo || 0) / 100} for two</span>
                     </div>
-                    <span className="text-sm font-bold text-primary group-hover:translate-x-1 transition-transform flex items-center gap-1">
-                      View Menu <ArrowRight className="w-4 h-4" />
-                    </span>
+                  </div>
+
+                  {/* Desktop Content Layout */}
+                  <div className="hidden md:block">
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="font-bold text-xl text-gray-900 leading-tight group-hover:text-primary transition-colors">{rest.name}</h3>
+                      <div className="bg-green-50 text-green-700 px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide flex-shrink-0">
+                        {rest.deliveryTime} min
+                      </div>
+                    </div>
+                    
+                    <div className="flex gap-2 overflow-x-auto pb-2 mb-2 no-scrollbar mask-fade-right">
+                      {(rest.cuisine || []).map((c, i) => (
+                        <span key={i} className="whitespace-nowrap px-2.5 py-1 bg-gray-50 text-gray-600 text-xs font-medium rounded-full border border-gray-100 flex-shrink-0">
+                          {c}
+                        </span>
+                      ))}
+                    </div>
+                    
+                    <div className="mt-auto pt-4 border-t border-gray-50 flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1 bg-green-50 px-2 py-1 rounded-lg border border-green-100">
+                          <Star className="w-3.5 h-3.5 text-green-600 fill-green-600" />
+                          <span className="text-xs font-bold text-green-700">{Number(rest.rating) > 0 ? Number(rest.rating).toFixed(1) : 'New'}</span>
+                        </div>
+                        <span className="text-xs text-gray-400 font-medium">•</span>
+                        <span className="text-xs text-gray-500 font-medium">₹{(rest.costForTwo || 0) / 100} for two</span>
+                      </div>
+                      <span className="text-sm font-bold text-primary group-hover:translate-x-1 transition-transform flex items-center gap-1">
+                        View Menu <ArrowRight className="w-4 h-4" />
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
