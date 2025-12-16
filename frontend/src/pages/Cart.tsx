@@ -21,7 +21,7 @@ const Cart: React.FC = () => {
     const syncAndRefresh = async () => {
       // IMPORTANT: Wait for sync to complete FIRST to avoid race condition
       if (hasPendingOperations()) {
-        console.log('[Cart] Syncing pending operations before refresh...');
+        console.log('[Cart] Syncing pending operations before refresh..');
         await syncPendingOperations();
         console.log('[Cart] Sync complete');
       }
