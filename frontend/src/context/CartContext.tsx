@@ -207,6 +207,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const refreshCart = useCallback(async (poolId: string) => {
     if (!user) return;
 
+    // Don't refresh while sync is in progress to avoid race conditions
+    if (inFlightSyncRef.current) {
+      console.log('[RefreshCart] Skipping refresh - sync in progress');
+      return;
+    }
+
     const inFlight = refreshInFlightRef.current;
     if (inFlight && inFlight.poolId === poolId) {
       return inFlight.promise;
@@ -215,6 +221,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const promise = (async () => {
       try {
         setLoading(true);
+        console.log('[RefreshCart] Fetching cart from backend...');
         const cartData = await api.getCart(poolId);
 
         // Transform backend response to frontend Cart structure
@@ -242,15 +249,17 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           })) || []
         };
 
+        console.log('[RefreshCart] Setting cart with', transformedCart.items.length, 'items');
         setCart(transformedCart);
         storePoolId(poolId);
       } catch (error: any) {
         if (error.response?.status === 404) {
           // Cart not found, initialize empty
+          console.log('[RefreshCart] Cart not found (404), initializing empty');
           setCart({ poolId: poolId, items: [] });
           storePoolId(poolId);
         } else {
-          console.error('Failed to refresh cart', error);
+          console.error('[RefreshCart] Failed to refresh cart', error);
         }
       } finally {
         setLoading(false);

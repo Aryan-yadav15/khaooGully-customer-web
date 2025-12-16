@@ -17,20 +17,26 @@ const Cart: React.FC = () => {
   useEffect(() => {
     if (!cart.poolId) return;
 
-    // Sync any pending operations from rapid adds
-    const syncOnLoad = async () => {
+    // Sync any pending operations from rapid adds, then refresh if needed
+    const syncAndRefresh = async () => {
+      // IMPORTANT: Wait for sync to complete FIRST to avoid race condition
       if (hasPendingOperations()) {
+        console.log('[Cart] Syncing pending operations before refresh...');
         await syncPendingOperations();
+        console.log('[Cart] Sync complete');
+      }
+      
+      // Only refresh if we have items with missing restaurant names
+      const hasMissingRestaurantName = cart.items.some((it) => !(it.restaurantName || '').trim());
+      if (hasMissingRestaurantName) {
+        console.log('[Cart] Refreshing cart to get missing data...');
+        await refreshCart(cart.poolId);
+        console.log('[Cart] Refresh complete');
       }
     };
     
-    void syncOnLoad();
-
-    const hasMissingRestaurantName = cart.items.some((it) => !(it.restaurantName || '').trim());
-    if (hasMissingRestaurantName) {
-      void refreshCart(cart.poolId);
-    }
-  }, [cart.poolId, cart.items, refreshCart, hasPendingOperations, syncPendingOperations]);
+    void syncAndRefresh();
+  }, [cart.poolId, refreshCart, hasPendingOperations, syncPendingOperations]);
 
   // Fetch pool details (cart refresh is handled by CartContext)
   useEffect(() => {
