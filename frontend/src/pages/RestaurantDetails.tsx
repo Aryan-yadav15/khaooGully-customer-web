@@ -12,7 +12,7 @@ const RestaurantDetails: React.FC = () => {
   const [menuSearch, setMenuSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'menu' | 'reviews'>('menu');
-  const { addToCart, cart, updateQuantity, removeFromCart, refreshCart } = useCart();
+  const { addToCart, cart, updateQuantity, removeFromCart, refreshCart, syncPendingOperations, hasPendingOperations } = useCart();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -26,8 +26,18 @@ const RestaurantDetails: React.FC = () => {
         setRestaurant(restData);
         setMenu(menuData);
         
-        // Refresh cart for this pool
-        await refreshCart(poolId);
+        // IMPORTANT: Sync pending operations FIRST before refreshing cart
+        // This prevents the race condition where backend has stale data
+        if (hasPendingOperations()) {
+          console.log('[RestaurantDetails] Syncing pending operations before refresh...');
+          await syncPendingOperations();
+        }
+        
+        // Only refresh cart if poolId changed or cart is for different pool
+        if (cart.poolId !== poolId) {
+          console.log('[RestaurantDetails] Refreshing cart for pool:', poolId);
+          await refreshCart(poolId);
+        }
       } catch (err) {
         console.error(err);
       } finally {

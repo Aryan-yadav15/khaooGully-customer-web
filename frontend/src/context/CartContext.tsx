@@ -121,17 +121,28 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
               if (op.type === 'add' && op.dish) {
                 await api.addToCart(op.poolId, op.restaurantId, op.dishId, op.quantity);
                 console.log(`[CartSync] ✓ Added ${op.dishId}`);
-              } else if (op.type === 'update' && op.itemId) {
-                if (op.quantity <= 0) {
+              } else if (op.type === 'update') {
+                if (op.itemId) {
+                  // Real item - update or remove via API
+                  if (op.quantity <= 0) {
+                    await api.removeCartItem(op.itemId);
+                    console.log(`[CartSync] ✓ Removed ${op.itemId}`);
+                  } else {
+                    await api.updateCartItem(op.itemId, op.quantity);
+                    console.log(`[CartSync] ✓ Updated ${op.itemId}`);
+                  }
+                } else if (op.dish && op.quantity > 0) {
+                  // Temp item being updated - treat as add with final quantity
+                  await api.addToCart(op.poolId, op.restaurantId, op.dishId, op.quantity);
+                  console.log(`[CartSync] ✓ Added (from temp update) ${op.dishId}`);
+                }
+                // If temp item with quantity <= 0, nothing to sync (never existed on backend)
+              } else if (op.type === 'remove') {
+                if (op.itemId) {
                   await api.removeCartItem(op.itemId);
                   console.log(`[CartSync] ✓ Removed ${op.itemId}`);
-                } else {
-                  await api.updateCartItem(op.itemId, op.quantity);
-                  console.log(`[CartSync] ✓ Updated ${op.itemId}`);
                 }
-              } else if (op.type === 'remove' && op.itemId) {
-                await api.removeCartItem(op.itemId);
-                console.log(`[CartSync] ✓ Removed ${op.itemId}`);
+                // If temp item being removed, nothing to sync (never existed on backend)
               }
               
               // Remove from pending after successful sync
@@ -173,7 +184,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [user, cart.poolId]);
 
   // Debounced sync - triggers sync 500ms after last operation
-  const scheduleSyncRef = useRef((immediate = false) => {
+  const scheduleSync = useCallback((immediate = false) => {
     if (syncTimerRef.current) {
       clearTimeout(syncTimerRef.current);
     }
@@ -185,7 +196,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         void syncPendingOperations();
       }, 500);
     }
-  });
+  }, [syncPendingOperations]);
 
   // Cleanup timer on unmount
   useEffect(() => {
@@ -198,9 +209,16 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Load cart from API on mount if poolId exists
   useEffect(() => {
-    if (user && cart.poolId && cart.items.length === 0) {
-      refreshCart(cart.poolId);
-    }
+    const loadCart = async () => {
+      if (user && cart.poolId && cart.items.length === 0) {
+        // Sync any pending operations first
+        if (hasPendingOperations()) {
+          await syncPendingOperations();
+        }
+        await refreshCart(cart.poolId);
+      }
+    };
+    void loadCart();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
@@ -343,7 +361,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     pendingOperationsRef.current.set(desiredKey, pendingOp);
 
     // Schedule debounced sync
-    scheduleSyncRef.current();
+    scheduleSync();
 
     // No immediate API call - operations are queued and synced via debounce
   };
@@ -371,7 +389,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     pendingOperationsRef.current.set(desiredKey, pendingOp);
 
     // Schedule debounced sync
-    scheduleSyncRef.current();
+    scheduleSync();
   };
 
   const updateQuantity = async (itemId: string, quantity: number) => {
@@ -392,19 +410,22 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }));
     }
 
-    // Queue update operation
+    // Queue update operation - include dish for temp items that need to sync as 'add'
+    const isTempItem = itemId.startsWith('temp-');
     const pendingOp: PendingOperation = {
       type: quantity <= 0 ? 'remove' : 'update',
       poolId: cart.poolId,
       restaurantId: existing.restaurantId,
       dishId: existing.dishId,
       quantity,
-      itemId: itemId.startsWith('temp-') ? undefined : itemId
+      itemId: isTempItem ? undefined : itemId,
+      dish: isTempItem ? existing.dish : undefined,
+      restaurantName: isTempItem ? existing.restaurantName : undefined
     };
     pendingOperationsRef.current.set(desiredKey, pendingOp);
 
     // Schedule debounced sync
-    scheduleSyncRef.current();
+    scheduleSync();
   };
 
   const clearCart = async (poolId?: string) => {
