@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ChevronRight, ShoppingCart, User, LogOut, Home, ShoppingBag, Menu, X, ShieldCheck } from 'lucide-react';
+import { ChevronRight, ShoppingCart, User, LogOut, Home, ShoppingBag, ShieldCheck } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { getCustomerOrders } from '../../services/api';
@@ -10,7 +10,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { itemCount, cartTotal, syncing, hasPendingOperations } = useCart();
   const { user, isAdmin, signOut } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [activeOrder, setActiveOrder] = useState<CustomerOrderHistoryItem | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -73,21 +72,21 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   const showIncomingOrderFooter = !!user && !!activeOrder;
   const showMenuCartFooter = isRestaurantMenuRoute && itemCount > 0;
-  const menuCartFooterBottomClass = showIncomingOrderFooter ? 'bottom-24' : 'bottom-4';
+  const menuCartFooterBottomClass = showIncomingOrderFooter ? 'bottom-24 md:bottom-32' : 'bottom-4';
   const needsBottomPadding = showIncomingOrderFooter || showMenuCartFooter;
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans selection:bg-primary-light selection:text-primary-dark">
       {/* Floating Navbar */}
-      <header className="sticky top-4 z-50 px-4 md:px-6 mb-2">
-        <div className="max-w-7xl mx-auto bg-white/90 backdrop-blur-md border border-white/40 shadow-soft rounded-2xl px-4 py-3 flex items-center justify-between transition-all duration-300 hover:shadow-lg hover:bg-white/95">
+      <header className="sticky top-2 md:top-4 z-50 px-2 md:px-6 mb-2">
+        <div className="max-w-7xl mx-auto bg-white/90 backdrop-blur-md border border-white/40 shadow-soft rounded-xl md:rounded-2xl px-3 py-2 md:px-4 md:py-3 flex items-center justify-between transition-all duration-300 hover:shadow-lg hover:bg-white/95">
           
           {/* Logo Section */}
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="bg-black text-white rounded-xl p-1.5 shadow-sm group-hover:scale-105 transition-transform duration-300">
-               <img src="/LogoCircle.svg" alt="Khaoo Gully" className="w-9 h-9" />
+            <div className="bg-black text-white rounded-lg md:rounded-xl p-1.5 shadow-sm group-hover:scale-105 transition-transform duration-300">
+               <img src="/LogoCircle.svg" alt="Khaoo Gully" className="w-7 h-7 md:w-9 md:h-9" />
             </div>
-            <span className="text-xl font-bold text-gray-900 tracking-tight group-hover:text-primary transition-colors">
+            <span className="text-xl font-bold text-gray-900 tracking-tight group-hover:text-primary transition-colors hidden md:block">
               Khaoo Gully
             </span>
           </Link>
@@ -173,6 +172,24 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                       </div>
                       <div className="p-2">
                         <Link
+                          to="/"
+                          onClick={() => setShowUserMenu(false)}
+                          className="md:hidden w-full text-left px-4 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-primary-light hover:text-primary-dark flex items-center gap-3 transition-colors"
+                        >
+                          <Home className="w-4 h-4" />
+                          Home
+                        </Link>
+                        {isAdmin && (
+                          <Link
+                            to="/admin"
+                            onClick={() => setShowUserMenu(false)}
+                            className="md:hidden w-full text-left px-4 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-primary-light hover:text-primary-dark flex items-center gap-3 transition-colors"
+                          >
+                            <ShieldCheck className="w-4 h-4" />
+                            Admin Dashboard
+                          </Link>
+                        )}
+                        <Link
                           to="/profile"
                           onClick={() => setShowUserMenu(false)}
                           className="w-full text-left px-4 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-primary-light hover:text-primary-dark flex items-center gap-3 transition-colors"
@@ -209,55 +226,13 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 Sign In
               </Link>
             )}
-
-            {/* Mobile Menu Button */}
-            <button 
-              className="md:hidden p-2 text-gray-500 hover:bg-gray-100 rounded-xl"
-              onClick={() => setShowMobileMenu(!showMobileMenu)}
-            >
-              {showMobileMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
           </div>
         </div>
 
-        {/* Mobile Menu Dropdown */}
-        {showMobileMenu && (
-          <div className="md:hidden absolute top-full left-0 right-0 mt-2 mx-4 bg-white rounded-2xl shadow-xl border border-gray-100 p-2 animate-in slide-in-from-top-2 duration-200">
-            <Link 
-              to="/" 
-              onClick={() => setShowMobileMenu(false)}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium ${
-                location.pathname === '/' ? 'bg-primary-light text-primary' : 'text-gray-700 hover:bg-gray-50'
-              }`}
-            >
-              <Home className="w-5 h-5" />
-              Home
-            </Link>
-            {user && (
-              <Link 
-                to="/profile" 
-                onClick={() => setShowMobileMenu(false)}
-                className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50"
-              >
-                <ShoppingBag className="w-5 h-5" />
-                My Orders
-              </Link>
-            )}
-            {isAdmin && (
-              <Link 
-                to="/admin" 
-                onClick={() => setShowMobileMenu(false)}
-                className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50"
-              >
-                <ShieldCheck className="w-5 h-5" />
-                Admin Dashboard
-              </Link>
-            )}
-          </div>
-        )}
+        {/* Mobile Menu Dropdown - Removed */}
       </header>
 
-      <main className={`flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 w-full ${needsBottomPadding ? 'pb-32' : ''}`}>
+      <main className={`flex-grow max-w-7xl mx-auto w-full ${needsBottomPadding ? 'pb-32' : ''}`}>
         {children}
       </main>
 
@@ -276,10 +251,10 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       </footer>
 
       {showMenuCartFooter && (
-        <div className={`fixed inset-x-0 ${menuCartFooterBottomClass} z-40 px-4 animate-in slide-in-from-bottom-4 duration-300`}>
+        <div className={`fixed inset-x-0 ${menuCartFooterBottomClass} z-[60] px-2 md:px-4 animate-in slide-in-from-bottom-4 duration-300`}>
           <button
             onClick={() => navigate('/cart')}
-            className="w-full max-w-3xl mx-auto bg-gray-900 text-white rounded-2xl shadow-xl shadow-gray-900/20 px-5 py-4 flex items-center justify-between gap-3 hover:bg-black hover:scale-[1.01] transition-all duration-300 border border-white/10"
+            className="w-full max-w-3xl mx-auto bg-gray-900 text-white rounded-xl md:rounded-2xl shadow-xl shadow-gray-900/20 px-4 py-3 md:px-5 md:py-4 flex items-center justify-between gap-3 hover:bg-black hover:scale-[1.01] transition-all duration-300 border border-white/10"
           >
             <div className="min-w-0 flex flex-col items-start">
               <div className="flex items-center gap-2">
@@ -288,7 +263,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               </div>
               <p className="text-xs text-gray-400 truncate mt-0.5">Subtotal {cartSubtotalText}</p>
             </div>
-            <div className="flex items-center gap-2 flex-shrink-0 bg-white/10 px-3 py-2 rounded-xl backdrop-blur-sm group">
+            <div className="flex items-center gap-2 flex-shrink-0 bg-white/10 px-3 py-2 rounded-lg md:rounded-xl backdrop-blur-sm group">
               <span className="text-sm font-bold group-hover:text-primary transition-colors">Checkout</span>
               <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </div>
@@ -297,19 +272,19 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       )}
 
       {showIncomingOrderFooter && activeOrder && (
-        <div className="fixed inset-x-0 bottom-6 z-50 px-4 animate-in slide-in-from-bottom-4 duration-500">
+        <div className="fixed inset-x-0 bottom-4 md:bottom-6 z-[70] px-2 md:px-4 animate-in slide-in-from-bottom-4 duration-500">
           <button
             onClick={() => navigate(`/order/${activeOrder.orderId}`)}
-            className="w-full max-w-md mx-auto bg-white/90 backdrop-blur-xl border border-white/50 rounded-3xl shadow-2xl shadow-primary/20 p-4 flex items-center justify-between gap-4 hover:scale-[1.02] transition-all duration-300 group relative overflow-hidden"
+            className="w-full max-w-md mx-auto bg-white/90 backdrop-blur-xl border border-white/50 rounded-xl md:rounded-3xl shadow-2xl shadow-primary/20 p-3 md:p-4 flex items-center justify-between gap-3 md:gap-4 hover:scale-[1.02] transition-all duration-300 group relative overflow-hidden"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             
-            <div className="flex items-center gap-4 min-w-0 relative z-10">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center flex-shrink-0 shadow-lg shadow-primary/30 text-white">
-                <ShoppingBag className="w-6 h-6" />
+            <div className="flex items-center gap-3 md:gap-4 min-w-0 relative z-10">
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center flex-shrink-0 shadow-lg shadow-primary/30 text-white">
+                <ShoppingBag className="w-5 h-5 md:w-6 md:h-6" />
               </div>
               <div className="min-w-0 text-left">
-                <p className="text-xs font-bold text-primary uppercase tracking-wider mb-0.5 flex items-center gap-1">
+                <p className="text-[10px] md:text-xs font-bold text-primary uppercase tracking-wider mb-0.5 flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                   {orderStatusLabel}
                 </p>
@@ -319,8 +294,8 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               </div>
             </div>
 
-            <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all duration-300 shadow-sm group-hover:shadow-md relative z-10">
-               <ChevronRight className="w-5 h-5" />
+            <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all duration-300 shadow-sm group-hover:shadow-md relative z-10">
+               <ChevronRight className="w-4 h-4 md:w-5 md:h-5" />
             </div>
           </button>
         </div>

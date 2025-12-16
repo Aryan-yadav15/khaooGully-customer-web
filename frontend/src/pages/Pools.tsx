@@ -92,10 +92,10 @@ const Pools: React.FC = () => {
       });
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="mb-10">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-3xl font-bold text-gray-900">
+    <div className="max-w-4xl mx-auto px-4 py-4 md:py-8">
+      <div className="mb-6 md:mb-10">
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-4">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
             Active Pools at {campus?.name || 'Campus'}
           </h2>
           <Link to="/" className="flex items-center text-gray-500 hover:text-primary text-sm font-medium transition-colors">
@@ -111,13 +111,13 @@ const Pools: React.FC = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search pools or restaurants..."
-            className="w-full pl-12 pr-4 py-4 bg-white rounded-2xl border border-gray-100 shadow-soft focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+            className="w-full pl-12 pr-4 py-4 bg-white rounded-xl md:rounded-2xl border border-gray-100 shadow-soft focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
           />
         </div>
       </div>
       
       {filteredPools.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-3xl shadow-soft border border-gray-50">
+        <div className="text-center py-16 bg-white rounded-xl md:rounded-3xl shadow-soft border border-gray-50">
           <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
             <Store className="w-10 h-10 text-gray-300" />
           </div>
@@ -129,7 +129,7 @@ const Pools: React.FC = () => {
       ) : (
         <div className="grid gap-8 md:grid-cols-2">
           {filteredPools.map((pool) => (
-            <div key={pool.id} className="bg-white rounded-3xl shadow-soft border border-gray-50 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col h-full">
+            <div key={pool.id} className="bg-white rounded-xl md:rounded-3xl shadow-soft border border-gray-50 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col h-full">
               <div className="p-6 flex-grow">
                 <div className="flex justify-between items-start mb-4">
                   <div className="bg-primary-light text-primary-dark px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider">
@@ -167,14 +167,14 @@ const Pools: React.FC = () => {
               </div>
 
               <div className="p-6 pt-0 mt-auto">
-                <div className="flex items-center justify-between mb-6 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                <div className="flex items-center justify-between mb-6 p-4 bg-gray-50 rounded-xl md:rounded-2xl border border-gray-100">
                   <span className="text-sm text-gray-500 font-medium">Delivery Fee</span>
                   <span className="text-lg font-bold text-gray-900">₹{pool.delivery_fee_per_order / 100}</span>
                 </div>
 
                 <button
                   onClick={() => navigate(`/pool/${pool.id}`)}
-                  className="w-full py-4 bg-primary text-white rounded-2xl font-bold hover:bg-primary-dark transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:shadow-primary/40 active:scale-[0.98]"
+                  className="w-full py-4 bg-primary text-white rounded-xl md:rounded-2xl font-bold hover:bg-primary-dark transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:shadow-primary/40 active:scale-[0.98]"
                 >
                   Browse Restaurants <ArrowRight className="w-5 h-5" />
                 </button>

@@ -169,8 +169,22 @@ export interface AdminPoolOrder {
   poolName?: string;
   customerId: string;
   customerName?: string;
+  customerPhone?: string;
   restaurantId?: string;
   restaurantName?: string;
+  items?: Array<{
+    dishId: string;
+    dishName: string;
+    quantity: number;
+    price: number;
+    veg: boolean;
+    specialInstructions?: string;
+  }>;
+  subtotal?: number;
+  deliveryFee?: number;
+  platformFee?: number;
+  taxes?: number;
+  discount?: number;
   total?: number;
   status?: string;
   paymentStatus?: string;

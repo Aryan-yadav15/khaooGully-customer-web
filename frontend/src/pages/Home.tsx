@@ -65,19 +65,19 @@ const Home: React.FC = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-12">
-      <div className="mb-16 relative overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl p-8 md:p-12 shadow-xl text-white text-center">
+    <div className="max-w-6xl mx-auto px-4 py-4 md:py-12">
+      <div className="mb-6 md:mb-16 relative overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl md:rounded-3xl p-5 md:p-12 shadow-xl text-white text-center">
         <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-white/5 rounded-full blur-3xl"></div>
         <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-primary/20 rounded-full blur-2xl"></div>
         
         <div className="relative z-10 flex flex-col items-center justify-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-white/10 backdrop-blur-md rounded-full mb-6 shadow-inner border border-white/10 animate-in zoom-in duration-500">
-            <MapPin className="w-8 h-8 text-primary-light" />
+          <div className="inline-flex items-center justify-center w-12 h-12 md:w-16 md:h-16 bg-white/10 backdrop-blur-md rounded-full mb-4 md:mb-6 shadow-inner border border-white/10 animate-in zoom-in duration-500">
+            <MapPin className="w-6 h-6 md:w-8 md:h-8 text-primary-light" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight">
+          <h1 className="text-2xl md:text-5xl font-bold mb-4 md:mb-6 tracking-tight">
             Where are you <span className="text-primary-light">ordering from?</span>
           </h1>
-          <p className="text-lg text-gray-300 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-sm md:text-lg text-gray-300 max-w-2xl mx-auto leading-relaxed">
             Select your campus to join active food pools, save on delivery fees, and eat together.
           </p>
         </div>
@@ -93,11 +93,11 @@ const Home: React.FC = () => {
               <button
                 key={campus.id}
                 onClick={() => handleCampusSelect(campus.id)}
-                className="flex items-center p-6 bg-gradient-to-br from-white to-green-50/50 rounded-3xl shadow-md hover:shadow-xl border border-green-200 hover:border-green-500 transition-all duration-300 group text-left hover:-translate-y-1 relative overflow-hidden"
+                className="flex items-center p-4 md:p-6 bg-gradient-to-br from-white to-green-50/50 rounded-xl md:rounded-3xl shadow-md hover:shadow-xl border border-green-200 hover:border-green-500 transition-all duration-300 group text-left hover:-translate-y-1 relative overflow-hidden"
               >
                 <div className="absolute top-0 right-0 w-32 h-32 bg-green-100/20 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-green-100/40 transition-colors"></div>
-                <div className="p-4 bg-gray-50 rounded-2xl group-hover:bg-primary-light group-hover:text-primary transition-colors mr-5 flex-shrink-0">
-                  <Building2 className="w-8 h-8 text-gray-400 group-hover:text-primary transition-colors" />
+                <div className="p-3 md:p-4 bg-gray-50 rounded-lg md:rounded-2xl group-hover:bg-primary-light group-hover:text-primary transition-colors mr-4 md:mr-5 flex-shrink-0">
+                  <Building2 className="w-6 h-6 md:w-8 md:h-8 text-gray-400 group-hover:text-primary transition-colors" />
                 </div>
                 <div className="flex-grow min-w-0">
                   <div className="flex justify-between items-start mb-1">
@@ -122,24 +122,21 @@ const Home: React.FC = () => {
           return (
             <div
               key={campus.id}
-              className="relative flex items-center p-6 bg-white rounded-3xl shadow-sm border border-gray-50 text-left opacity-70 hover:opacity-100 transition-opacity"
+              className="relative flex items-center p-4 md:p-6 bg-white rounded-xl md:rounded-3xl shadow-sm border border-gray-50 text-left opacity-70 hover:opacity-100 transition-opacity"
               aria-disabled="true"
             >
-              <div className="flex items-center w-full opacity-50 blur-[0.5px]">
-                <div className="p-4 bg-gray-50 rounded-2xl mr-5 flex-shrink-0">
-                  <Building2 className="w-8 h-8 text-gray-300" />
+              <div className="flex items-center w-full opacity-40 blur-[1px]">
+                <div className="p-3 md:p-4 bg-gray-50 rounded-lg md:rounded-2xl mr-4 md:mr-5 flex-shrink-0">
+                  <Building2 className="w-6 h-6 md:w-8 md:h-8 text-gray-300" />
                 </div>
                 <div className="flex-grow min-w-0">
                   <div className="flex justify-between items-start mb-1">
                     <h3 className="font-bold text-lg text-gray-900 truncate pr-2">{campus.name}</h3>
                     <ArrowRight className="w-5 h-5 text-gray-200" />
                   </div>
-                  <div className="flex items-center text-gray-400 text-sm mb-4 truncate">
+                  <div className="flex items-center text-gray-400 text-sm truncate">
                     <MapPin className="w-3.5 h-3.5 mr-1.5 flex-shrink-0" />
                     <span className="truncate">{campus.hotspotLocation}</span>
-                  </div>
-                  <div className="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-400 text-xs font-bold uppercase tracking-wide">
-                    Coming soon
                   </div>
                 </div>
               </div>

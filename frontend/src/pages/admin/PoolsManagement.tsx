@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, Edit2, Trash2, X, Search, Filter, ChevronDown, Clock, MapPin, Truck, Ban } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Search, Filter, ChevronDown, Clock, MapPin, Truck, Ban, Eye, User, Phone, Package, ChevronRight, ChevronUp } from 'lucide-react';
 import { getPools, getCampuses, getRestaurants, admin } from '../../services/api';
-import type { Pool, Campus, Restaurant } from '../../types';
+import type { Pool, Campus, Restaurant, AdminPoolOrder } from '../../types';
 import { dateTimeLocalToIso, isoToDateTimeLocalValue, parseDateTimeLocal } from '../../utils/datetime';
 
 const PoolsManagement: React.FC = () => {
@@ -10,6 +10,11 @@ const PoolsManagement: React.FC = () => {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPool, setEditingPool] = useState<Pool | null>(null);
+  const [isOrdersModalOpen, setIsOrdersModalOpen] = useState(false);
+  const [selectedPoolOrders, setSelectedPoolOrders] = useState<AdminPoolOrder[]>([]);
+  const [selectedPoolName, setSelectedPoolName] = useState<string>('');
+  const [loadingOrders, setLoadingOrders] = useState(false);
+  const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     campusId: '',
@@ -93,6 +98,21 @@ const PoolsManagement: React.FC = () => {
       } catch (error) {
         console.error('Failed to delete pool:', error);
       }
+    }
+  };
+
+  const handleViewOrders = async (pool: Pool) => {
+    setLoadingOrders(true);
+    setSelectedPoolName(pool.name || pool.id);
+    setIsOrdersModalOpen(true);
+    try {
+      const orders = await admin.getPoolOrders(pool.id);
+      setSelectedPoolOrders(orders);
+    } catch (error) {
+      console.error('Failed to fetch pool orders:', error);
+      setSelectedPoolOrders([]);
+    } finally {
+      setLoadingOrders(false);
     }
   };
 
@@ -229,6 +249,13 @@ const PoolsManagement: React.FC = () => {
                   </td>
                   <td className="px-8 py-5 text-right">
                     <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => handleViewOrders(pool)}
+                        className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors"
+                        title="View Orders"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
                       {(pool.computed_status === 'closed' && pool.manual_status !== 'closed' && pool.manual_status !== 'synced') && (
                         <button
                           onClick={() => handleClosePool(pool)}
@@ -402,6 +429,225 @@ const PoolsManagement: React.FC = () => {
                 className="px-6 py-3 bg-lime-500 text-white rounded-xl font-bold hover:bg-lime-600 transition-colors shadow-lg shadow-lime-200"
               >
                 {editingPool ? 'Update Pool' : 'Create Pool'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Orders Modal */}
+      {isOrdersModalOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Pool Orders</h2>
+                <p className="text-sm text-gray-500 mt-1">{selectedPoolName}</p>
+              </div>
+              <button 
+                onClick={() => {
+                  setIsOrdersModalOpen(false);
+                  setExpandedOrderId(null);
+                }} 
+                className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6">
+              {loadingOrders ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-lime-500"></div>
+                </div>
+              ) : selectedPoolOrders.length === 0 ? (
+                <div className="text-center py-12">
+                  <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500 font-medium">No orders in this pool yet</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {selectedPoolOrders.map((order) => (
+                    <div 
+                      key={order.orderId} 
+                      className="border border-gray-200 rounded-xl overflow-hidden hover:border-gray-300 transition-colors"
+                    >
+                      {/* Order Header - Always Visible */}
+                      <div 
+                        className="p-4 bg-white cursor-pointer hover:bg-gray-50 transition-colors"
+                        onClick={() => setExpandedOrderId(
+                          expandedOrderId === order.orderId ? null : order.orderId
+                        )}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1 grid grid-cols-4 gap-4">
+                            {/* Customer Info */}
+                            <div>
+                              <div className="flex items-center gap-2 mb-1">
+                                <User className="w-4 h-4 text-gray-400" />
+                                <span className="font-semibold text-gray-900">
+                                  {order.customerName || 'Unknown'}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 text-sm text-gray-600">
+                                <Phone className="w-3.5 h-3.5 text-gray-400" />
+                                <span>{order.customerPhone || (order as any).customer_phone || 'N/A'}</span>
+                              </div>
+                            </div>
+
+                            {/* Restaurant */}
+                            <div>
+                              <div className="text-xs text-gray-500 mb-1">Restaurant</div>
+                              <div className="font-medium text-gray-900">
+                                {order.restaurantName || (order as any).restaurant_name || 'N/A'}
+                              </div>
+                            </div>
+
+                            {/* Total */}
+                            <div>
+                              <div className="text-xs text-gray-500 mb-1">Total Amount</div>
+                              <div className="font-bold text-lime-600 text-lg">
+                                ₹{Math.round((order.total || 0) / 100)}
+                              </div>
+                            </div>
+
+                            {/* Status */}
+                            <div>
+                              <div className="text-xs text-gray-500 mb-1">Status</div>
+                              <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${
+                                order.status === 'delivered' ? 'bg-green-100 text-green-700' :
+                                order.status === 'cancelled' ? 'bg-red-100 text-red-700' :
+                                order.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                                'bg-blue-100 text-blue-700'
+                              }`}>
+                                {order.status?.toUpperCase() || 'POOLING'}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Expand Icon */}
+                          <div className="ml-4">
+                            {expandedOrderId === order.orderId ? (
+                              <ChevronUp className="w-5 h-5 text-gray-400" />
+                            ) : (
+                              <ChevronRight className="w-5 h-5 text-gray-400" />
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Expanded Items Section */}
+                      {expandedOrderId === order.orderId && order.items && order.items.length > 0 && (
+                        <div className="border-t border-gray-200 bg-gray-50 p-4">
+                          <div className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                            <Package className="w-4 h-4" />
+                            Order Items ({order.items.length})
+                          </div>
+                          <div className="space-y-2">
+                            {order.items.map((item: any, idx: number) => {
+                              // Handle different field name formats from backend
+                              const dishName = item.dish_name || item.dishName || item.name || 'Unknown Item';
+                              const unitPrice = item.unit_price || item.price || 0;
+                              const quantity = item.quantity || 1;
+                              const isVeg = item.veg !== undefined ? item.veg : true;
+                              const instructions = item.special_instructions || item.specialInstructions;
+                              const itemTotal = item.subtotal || (unitPrice * quantity);
+                              
+                              return (
+                                <div 
+                                  key={idx} 
+                                  className="bg-white rounded-lg p-3 flex items-center justify-between border border-gray-200"
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <div className={`w-2 h-2 rounded-full ${
+                                      isVeg ? 'bg-green-500' : 'bg-red-500'
+                                    }`}></div>
+                                    <div>
+                                      <div className="font-medium text-gray-900">{dishName}</div>
+                                      {instructions && (
+                                        <div className="text-xs text-gray-500 mt-1">
+                                          Note: {instructions}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-4">
+                                    <div className="text-sm text-gray-600">
+                                      Qty: <span className="font-semibold">{quantity}</span>
+                                    </div>
+                                    <div className="font-semibold text-gray-900">
+                                      ₹{Math.round(itemTotal / 100)}
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                          
+                          {/* Order Summary */}
+                          {order.subtotal !== undefined && (
+                            <div className="mt-4 pt-3 border-t border-gray-200 space-y-1">
+                              <div className="flex justify-between text-sm text-gray-600">
+                                <span>Subtotal</span>
+                                <span>₹{Math.round(order.subtotal / 100)}</span>
+                              </div>
+                              {order.deliveryFee !== undefined && order.deliveryFee > 0 && (
+                                <div className="flex justify-between text-sm text-gray-600">
+                                  <span>Delivery Fee</span>
+                                  <span>₹{Math.round(order.deliveryFee / 100)}</span>
+                                </div>
+                              )}
+                              {order.platformFee !== undefined && order.platformFee > 0 && (
+                                <div className="flex justify-between text-sm text-gray-600">
+                                  <span>Platform Fee</span>
+                                  <span>₹{Math.round(order.platformFee / 100)}</span>
+                                </div>
+                              )}
+                              {order.taxes !== undefined && order.taxes > 0 && (
+                                <div className="flex justify-between text-sm text-gray-600">
+                                  <span>Taxes</span>
+                                  <span>₹{Math.round(order.taxes / 100)}</span>
+                                </div>
+                              )}
+                              {order.discount !== undefined && order.discount > 0 && (
+                                <div className="flex justify-between text-sm text-green-600">
+                                  <span>Discount</span>
+                                  <span>-₹{Math.round(order.discount / 100)}</span>
+                                </div>
+                              )}
+                              <div className="flex justify-between text-base font-bold text-gray-900 pt-2 border-t border-gray-200">
+                                <span>Total</span>
+                                <span>₹{Math.round((order.total || 0) / 100)}</span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="p-6 border-t border-gray-100 bg-gray-50 flex justify-between items-center">
+              <div className="text-sm text-gray-600">
+                Total Orders: <span className="font-bold text-gray-900">{selectedPoolOrders.length}</span>
+                {selectedPoolOrders.length > 0 && (
+                  <span className="ml-4">
+                    Total Revenue: <span className="font-bold text-lime-600">
+                      ₹{Math.round(selectedPoolOrders.reduce((sum, order) => sum + (order.total || 0), 0) / 100)}
+                    </span>
+                  </span>
+                )}
+              </div>
+              <button
+                onClick={() => {
+                  setIsOrdersModalOpen(false);
+                  setExpandedOrderId(null);
+                }}
+                className="px-6 py-3 bg-gray-800 text-white rounded-xl font-bold hover:bg-gray-900 transition-colors"
+              >
+                Close
               </button>
             </div>
           </div>

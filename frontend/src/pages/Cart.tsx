@@ -144,45 +144,45 @@ const Cart: React.FC = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
+      <div className="flex items-center justify-between mb-6 md:mb-8">
+        <div className="flex items-center gap-3 md:gap-4">
           <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-            <ArrowLeft className="w-6 h-6 text-gray-900" />
+            <ArrowLeft className="w-5 h-5 md:w-6 md:h-6 text-gray-900" />
           </button>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Your Cart</h1>
-            <div className="flex items-center gap-2 text-sm mt-1">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Your Cart</h1>
+            <div className="flex items-center gap-2 text-xs md:text-sm mt-1">
               <span className="text-gray-500">Pool:</span>
               <span className="font-bold text-primary">{pool?.name}</span>
             </div>
           </div>
         </div>
-        <span className="px-4 py-1.5 bg-primary-light text-primary-dark rounded-full text-xs font-bold uppercase tracking-wider border border-primary/10">
+        <span className="px-3 py-1 md:px-4 md:py-1.5 bg-primary-light text-primary-dark rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider border border-primary/10">
           POOLING ACTIVE
         </span>
       </div>
 
-      <div className="bg-white border border-gray-100 rounded-3xl p-6 mb-8 flex flex-col md:flex-row gap-8 items-center shadow-soft">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center text-red-500">
-            <Clock className="w-6 h-6" />
+      <div className="bg-white border border-gray-100 rounded-xl md:rounded-3xl p-4 md:p-6 mb-6 md:mb-8 flex flex-row gap-2 md:gap-8 items-center justify-between md:justify-start shadow-soft">
+        <div className="flex items-center gap-2 md:gap-4 min-w-0">
+          <div className="w-10 h-10 md:w-12 md:h-12 bg-red-50 rounded-xl md:rounded-2xl flex items-center justify-center text-red-500 flex-shrink-0">
+            <Clock className="w-5 h-5 md:w-6 md:h-6" />
           </div>
-          <div>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">POOL CLOSES</p>
-            <p className="font-bold text-gray-900 text-xl leading-none mb-1">{pool ? formatLocalTime(pool.collection_end) : '...'}</p>
-            <p className="text-xs text-gray-500 font-medium">Last chance to order</p>
+          <div className="min-w-0">
+            <p className="text-[8px] md:text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5 truncate">POOL CLOSES</p>
+            <p className="font-bold text-gray-900 text-lg md:text-xl leading-none mb-1 truncate">{pool ? formatLocalTime(pool.collection_end) : '...'}</p>
+            <p className="text-[10px] md:text-xs text-gray-500 font-medium truncate">Last chance</p>
           </div>
         </div>
-        <div className="hidden md:block w-px h-12 bg-gray-100"></div>
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-primary-light rounded-2xl flex items-center justify-center text-primary-dark">
-            <Truck className="w-6 h-6" />
+        <div className="w-px h-8 md:h-12 bg-gray-100 flex-shrink-0"></div>
+        <div className="flex items-center gap-2 md:gap-4 min-w-0">
+          <div className="w-10 h-10 md:w-12 md:h-12 bg-primary-light rounded-xl md:rounded-2xl flex items-center justify-center text-primary-dark flex-shrink-0">
+            <Truck className="w-5 h-5 md:w-6 md:h-6" />
           </div>
-          <div>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">EXPECTED DELIVERY</p>
-            <p className="font-bold text-gray-900 text-xl leading-none mb-1">{pool ? formatLocalTime(pool.expected_delivery_time) : '...'}</p>
-            <p className="text-xs text-gray-500 font-medium">Food arrives at</p>
+          <div className="min-w-0">
+            <p className="text-[8px] md:text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5 truncate">DELIVERY</p>
+            <p className="font-bold text-gray-900 text-lg md:text-xl leading-none mb-1 truncate">{pool ? formatLocalTime(pool.expected_delivery_time) : '...'}</p>
+            <p className="text-[10px] md:text-xs text-gray-500 font-medium truncate">Arrives at</p>
           </div>
         </div>
       </div>
@@ -195,7 +195,7 @@ const Cart: React.FC = () => {
             const restaurantSubtotal = items.reduce((sum, it) => sum + it.price * it.quantity, 0);
 
             return (
-            <div key={restaurantId} className="bg-white rounded-3xl shadow-soft border border-gray-50 overflow-hidden">
+            <div key={restaurantId} className="bg-white rounded-xl md:rounded-3xl shadow-soft border border-gray-50 overflow-hidden">
               <div className="bg-gray-50/50 px-8 py-5 border-b border-gray-50">
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
@@ -212,7 +212,7 @@ const Cart: React.FC = () => {
                 {items.map((item) => (
                   <div key={item.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 py-6 border-b border-gray-50 last:border-0 last:pb-0 first:pt-0">
                     <div className="flex items-start sm:items-center gap-4 sm:gap-6 flex-1 min-w-0">
-                      <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gray-100 rounded-2xl overflow-hidden flex-shrink-0 border border-gray-100 relative">
+                      <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gray-100 rounded-xl md:rounded-2xl overflow-hidden flex-shrink-0 border border-gray-100 relative">
                         {item.dish.image ? (
                           <img src={item.dish.image} alt={item.dish.name} className="w-full h-full object-cover" />
                         ) : (
@@ -271,7 +271,7 @@ const Cart: React.FC = () => {
 
         {/* Order Summary */}
         <div className="lg:w-[24rem] flex-shrink-0">
-          <div className="bg-white rounded-3xl shadow-soft border border-gray-50 p-8 sticky top-24">
+          <div className="bg-white rounded-xl md:rounded-3xl shadow-soft border border-gray-50 p-8 sticky top-24">
             <h3 className="text-2xl font-bold text-gray-900 mb-8">Order Summary</h3>
             
             <div className="space-y-4 mb-8">
@@ -314,7 +314,7 @@ const Cart: React.FC = () => {
       {/* Payment Confirmation Modal */}
       {showPaymentModal && (
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl animate-in zoom-in-95 duration-200">
+          <div className="bg-white rounded-xl md:rounded-3xl max-w-md w-full p-8 shadow-2xl animate-in zoom-in-95 duration-200">
             <div className="flex items-start justify-between mb-6">
               <h3 className="text-2xl font-bold text-gray-900">Payment Method</h3>
               <button

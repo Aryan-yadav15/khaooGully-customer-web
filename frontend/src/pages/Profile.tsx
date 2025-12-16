@@ -100,7 +100,7 @@ export default function Profile() {
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-12">
       {/* Profile Header Card */}
-      <div className="bg-white rounded-3xl shadow-soft border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-xl md:rounded-3xl shadow-soft border border-gray-100 overflow-hidden">
         <div className="bg-primary-light/30 px-8 py-6 border-b border-gray-100 flex items-center gap-4">
           <div className="w-16 h-16 rounded-full bg-primary text-white flex items-center justify-center text-2xl font-bold shadow-lg shadow-primary/20">
             {profile.fullName?.charAt(0).toUpperCase() || 'U'}
@@ -145,14 +145,14 @@ export default function Profile() {
                     value={phoneDraft}
                     onChange={(e) => setPhoneDraft(e.target.value)}
                     type="tel"
-                    className="flex-1 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all font-medium"
+                    className="flex-1 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg md:rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all font-medium"
                     placeholder="+91 9876543210"
                     autoFocus
                   />
                   <button
                     onClick={savePhone}
                     disabled={savingPhone}
-                    className="p-2.5 rounded-xl bg-primary text-white hover:bg-primary-dark disabled:opacity-50 transition-colors shadow-sm"
+                    className="p-2.5 rounded-lg md:rounded-xl bg-primary text-white hover:bg-primary-dark disabled:opacity-50 transition-colors shadow-sm"
                     title="Save"
                   >
                     {savingPhone ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
@@ -160,7 +160,7 @@ export default function Profile() {
                   {!canEditPhone && (
                     <button
                       onClick={() => setIsEditingPhone(false)}
-                      className="p-2.5 rounded-xl bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors"
+                      className="p-2.5 rounded-lg md:rounded-xl bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors"
                       title="Cancel"
                     >
                       <X className="w-5 h-5" />
@@ -201,7 +201,7 @@ export default function Profile() {
       </div>
 
       {/* Orders Card */}
-      <div className="bg-white rounded-3xl shadow-soft border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-xl md:rounded-3xl shadow-soft border border-gray-100 overflow-hidden">
         <div className="px-8 py-6 border-b border-gray-100 flex items-center justify-between">
           <h2 className="text-xl font-bold text-gray-900 flex items-center gap-3">
             <ShoppingBag className="w-5 h-5 text-primary" />
@@ -223,7 +223,7 @@ export default function Profile() {
             <p className="text-gray-500 mb-6">Looks like you haven't placed any orders yet.</p>
             <Link 
               to="/" 
-              className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-primary text-white font-bold hover:bg-primary-dark transition-colors shadow-lg shadow-primary/20"
+              className="inline-flex items-center justify-center px-6 py-3 rounded-lg md:rounded-xl bg-primary text-white font-bold hover:bg-primary-dark transition-colors shadow-lg shadow-primary/20"
             >
               Start Ordering
             </Link>
@@ -273,7 +273,7 @@ export default function Profile() {
                     </div>
                     <Link
                       to={`/order/${o.orderId}`}
-                      className="px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-bold hover:bg-primary-dark shadow-lg shadow-primary/20 hover:shadow-primary/30 hover:-translate-y-0.5 transition-all flex items-center gap-2"
+                      className="px-5 py-2.5 rounded-lg md:rounded-xl bg-primary text-white text-sm font-bold hover:bg-primary-dark shadow-lg shadow-primary/20 hover:shadow-primary/30 hover:-translate-y-0.5 transition-all flex items-center gap-2"
                     >
                       View
                       <ChevronRight className="w-4 h-4" />

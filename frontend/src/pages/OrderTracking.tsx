@@ -98,7 +98,7 @@ const OrderTracking: React.FC = () => {
       </Link>
 
       {/* Success Header */}
-      <div className="bg-white rounded-3xl shadow-soft border border-gray-100 p-8 mb-6 text-center relative overflow-hidden">
+      <div className="bg-white rounded-xl md:rounded-3xl shadow-soft border border-gray-100 p-8 mb-6 text-center relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary-light via-primary to-primary-light"></div>
         <div className="inline-flex items-center justify-center w-20 h-20 bg-primary-light/30 rounded-full mb-4 shadow-sm animate-in zoom-in duration-500">
           <CheckCircle className="w-10 h-10 text-primary" />
@@ -117,7 +117,7 @@ const OrderTracking: React.FC = () => {
 
       {/* Delivery Details Card (Conditional) */}
       {(order.driverName || order.driverPhone || order.otp) && (
-        <div className="bg-primary-light/20 rounded-3xl shadow-soft border border-primary/10 p-6 mb-6 relative overflow-hidden">
+        <div className="bg-primary-light/20 rounded-xl md:rounded-3xl shadow-soft border border-primary/10 p-6 mb-6 relative overflow-hidden">
           <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-primary/5 rounded-full blur-2xl"></div>
           
           <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
@@ -128,7 +128,7 @@ const OrderTracking: React.FC = () => {
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {order.driverName && (
-                <div className="flex items-center gap-4 bg-white/60 p-3 rounded-2xl border border-white/50">
+                <div className="flex items-center gap-4 bg-white/60 p-3 rounded-xl md:rounded-2xl border border-white/50">
                   <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 text-gray-600">
                     <User className="w-6 h-6" />
                   </div>
@@ -140,7 +140,7 @@ const OrderTracking: React.FC = () => {
               )}
               
               {order.driverPhone && (
-                <div className="flex items-center gap-4 bg-white/60 p-3 rounded-2xl border border-white/50">
+                <div className="flex items-center gap-4 bg-white/60 p-3 rounded-xl md:rounded-2xl border border-white/50">
                   <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 text-gray-600">
                     <Phone className="w-6 h-6" />
                   </div>
@@ -153,7 +153,7 @@ const OrderTracking: React.FC = () => {
             </div>
             
             {order.otp && (
-              <div className="mt-4 p-5 bg-white rounded-2xl border-2 border-accent/30 shadow-sm relative overflow-hidden">
+              <div className="mt-4 p-5 bg-white rounded-xl md:rounded-2xl border-2 border-accent/30 shadow-sm relative overflow-hidden">
                 <div className="absolute right-0 top-0 bottom-0 w-2 bg-accent"></div>
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div className="flex-1 text-center sm:text-left">
@@ -175,7 +175,7 @@ const OrderTracking: React.FC = () => {
       )}
 
       {/* Order Status Timeline */}
-      <div className="bg-white rounded-3xl shadow-soft border border-gray-100 p-8 mb-6">
+      <div className="bg-white rounded-xl md:rounded-3xl shadow-soft border border-gray-100 p-8 mb-6">
         <h2 className="text-xl font-bold mb-8 flex items-center gap-2">
           <Clock className="w-5 h-5 text-primary" />
           Order Status
@@ -232,7 +232,7 @@ const OrderTracking: React.FC = () => {
       </div>
 
       {/* Order Summary Card */}
-      <div className="bg-white rounded-3xl shadow-soft border border-gray-100 p-8">
+      <div className="bg-white rounded-xl md:rounded-3xl shadow-soft border border-gray-100 p-8">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
             <Receipt className="w-5 h-5 text-primary" />
@@ -246,7 +246,7 @@ const OrderTracking: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-gray-50 rounded-2xl p-5 mb-6 space-y-3 text-sm">
+        <div className="bg-gray-50 rounded-xl md:rounded-2xl p-5 mb-6 space-y-3 text-sm">
           {order.poolName && (
             <div className="flex items-start gap-3">
               <Store className="w-4 h-4 text-gray-400 mt-0.5" />

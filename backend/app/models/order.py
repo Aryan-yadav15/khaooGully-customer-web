@@ -201,10 +201,17 @@ class AdminPoolOrderSummary(BaseModel):
     poolName: Optional[str] = Field(None, validation_alias="pool_name")
     customerId: str = Field(validation_alias="customer_id")
     customerName: Optional[str] = Field(None, validation_alias="customer_name")
+    customerPhone: Optional[str] = Field(None, validation_alias="customer_phone")
     restaurantId: Optional[str] = Field(None, validation_alias="restaurant_id")
     restaurantName: Optional[str] = Field(None, validation_alias="restaurant_name")
+    items: Optional[List[Dict[str, Any]]] = None
+    subtotal: Optional[int] = None
+    deliveryFee: Optional[int] = Field(None, validation_alias="delivery_fee")
+    platformFee: Optional[int] = Field(None, validation_alias="platform_fee")
+    taxes: Optional[int] = None
+    discount: Optional[int] = None
     total: Optional[int] = None
-    status: Optional[str] = None
+    status: Optional[str] = Field(None, validation_alias="order_status")
     paymentStatus: Optional[str] = Field(None, validation_alias="payment_status")
     orderedAt: Optional[datetime] = Field(None, validation_alias="ordered_at")
 

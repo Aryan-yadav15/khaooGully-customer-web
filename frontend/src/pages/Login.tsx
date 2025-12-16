@@ -48,7 +48,7 @@ const Login: React.FC = () => {
           <p className="text-gray-500 text-sm">Login to access your profile and orders</p>
         </div>
 
-        <div className="bg-white rounded-3xl shadow-lg shadow-gray-100 border border-gray-100 p-8">
+        <div className="bg-white rounded-xl md:rounded-3xl shadow-lg shadow-gray-100 border border-gray-100 p-6 md:p-8">
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
               {error}
@@ -65,7 +65,7 @@ const Login: React.FC = () => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-lime-500 focus:border-transparent transition-all outline-none text-gray-900 placeholder-gray-400"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg md:rounded-xl focus:ring-2 focus:ring-lime-500 focus:border-transparent transition-all outline-none text-gray-900 placeholder-gray-400"
                 placeholder="you@example.com"
                 required
               />
@@ -81,7 +81,7 @@ const Login: React.FC = () => {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-lime-500 focus:border-transparent transition-all outline-none text-gray-900 placeholder-gray-400"
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg md:rounded-xl focus:ring-2 focus:ring-lime-500 focus:border-transparent transition-all outline-none text-gray-900 placeholder-gray-400"
                   placeholder="••••••••"
                   required
                 />
@@ -94,7 +94,7 @@ const Login: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 bg-lime-500 text-white rounded-xl font-bold hover:bg-lime-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-lime-200"
+              className="w-full py-3.5 bg-lime-500 text-white rounded-lg md:rounded-xl font-bold hover:bg-lime-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-lime-200"
             >
               {loading ? (
                 <>

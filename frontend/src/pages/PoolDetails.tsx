@@ -48,32 +48,32 @@ const PoolDetails: React.FC = () => {
   );
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-5xl mx-auto px-4 py-4 md:py-8">
       {/* Pool Header Card */}
-      <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 mb-8 relative overflow-hidden">
+      <div className="bg-white rounded-xl md:rounded-3xl shadow-sm border border-gray-100 p-5 md:p-8 mb-6 md:mb-8 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-lime-50 rounded-full -mr-16 -mt-16 opacity-50"></div>
         
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-4">
-              <span className="px-3 py-1 bg-lime-100 text-lime-800 rounded-lg text-xs font-bold uppercase tracking-wide">
+            <div className="flex items-center gap-2 md:gap-4">
+              <span className="px-2 py-1 md:px-3 bg-lime-100 text-lime-800 rounded-lg text-[10px] md:text-xs font-bold uppercase tracking-wide">
                 Active Pool
               </span>
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Clock className="w-4 h-4" />
+              <div className="flex items-center gap-1 md:gap-2 text-xs md:text-sm text-gray-600">
+                <Clock className="w-3 h-3 md:w-4 md:h-4" />
                 <span>Ends in <span className="font-bold text-gray-900">115m 5s</span></span>
               </div>
             </div>
             <button 
               onClick={() => navigate(-1)}
-              className="flex items-center gap-1 text-gray-400 hover:text-gray-600 text-sm"
+              className="flex items-center gap-1 text-gray-400 hover:text-gray-600 text-xs md:text-sm"
             >
-              <X className="w-4 h-4" />
+              <X className="w-3 h-3 md:w-4 md:h-4" />
               Leave Pool
             </button>
           </div>
 
-          <h1 className="text-3xl font-bold text-gray-900 mb-6">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4 md:mb-6">
             Pool - {pool.name}
           </h1>
 
@@ -116,10 +116,10 @@ const PoolDetails: React.FC = () => {
               placeholder="Describe your craving (e.g., 'Spicy paneer under $20')..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-lime-500 focus:border-transparent outline-none transition-all"
+              className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-lg md:rounded-xl focus:ring-2 focus:ring-lime-500 focus:border-transparent outline-none transition-all"
             />
           </div>
-          <button className="px-6 py-3 bg-lime-500 text-white rounded-xl font-bold hover:bg-lime-600 transition-colors flex items-center gap-2 shadow-lg shadow-lime-200">
+          <button className="px-6 py-3 bg-lime-500 text-white rounded-lg md:rounded-xl font-bold hover:bg-lime-600 transition-colors flex items-center gap-2 shadow-lg shadow-lime-200">
             <Sparkles className="w-5 h-5" />
             AI Search
           </button>
@@ -150,7 +150,7 @@ const PoolDetails: React.FC = () => {
             <div 
               key={restaurant.id}
               onClick={() => navigate(`/pool/${poolId}/restaurant/${restaurant.id}`)}
-              className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all cursor-pointer group"
+              className="bg-white rounded-xl md:rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all cursor-pointer group"
             >
               <div className="h-48 overflow-hidden bg-gray-200 relative">
                 {restaurant.image ? (

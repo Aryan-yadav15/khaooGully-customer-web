@@ -150,48 +150,48 @@ const CampusRestaurants: React.FC = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      <div className="mb-10 relative overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl p-8 shadow-xl text-white">
+    <div className="max-w-6xl mx-auto px-4 py-4 md:py-8">
+      <div className="mb-6 md:mb-10 relative overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl md:rounded-3xl p-5 md:p-8 shadow-xl text-white">
         <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-white/5 rounded-full blur-3xl"></div>
         <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-primary/20 rounded-full blur-2xl"></div>
         
         <div className="relative z-10">
-          <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-8">
+          <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 md:gap-6 mb-6 md:mb-8">
             <div>
-              <div className="flex items-center gap-2 mb-2 text-gray-400 text-sm font-medium uppercase tracking-wider">
-                <Store className="w-4 h-4" />
+              <div className="flex items-center gap-2 mb-2 text-gray-400 text-xs md:text-sm font-medium uppercase tracking-wider">
+                <Store className="w-3 h-3 md:w-4 md:h-4" />
                 Campus Dining
               </div>
-              <h1 className="text-3xl md:text-4xl font-bold mb-2">
+              <h1 className="text-2xl md:text-4xl font-bold mb-2">
                 Restaurants at <span className="text-primary-light">{campus?.name || 'Campus'}</span>
               </h1>
-              <p className="text-gray-400 max-w-xl">
-                Pick a restaurant to start your order. Your cart will be locked to the selected pool to ensure efficient delivery.
+              <p className="text-gray-400 max-w-xl text-sm md:text-base">
+                Select a restaurant to start. You can mix and match items from different restaurants in the same Pool!
               </p>
             </div>
             <Link 
               to="/" 
-              className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-xl border border-white/10 text-sm font-medium transition-all text-white hover:scale-105"
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-xl border border-white/10 text-xs md:text-sm font-medium transition-all text-white hover:scale-105 w-full md:w-auto"
             >
-              <MapPin className="w-4 h-4" />
+              <MapPin className="w-3 h-3 md:w-4 md:h-4" />
               Change Location
             </Link>
           </div>
 
           <div className="relative group max-w-2xl">
-            <Search className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2 group-focus-within:text-primary-light transition-colors" />
+            <Search className="w-4 h-4 md:w-5 md:h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2 group-focus-within:text-primary-light transition-colors" />
             <input
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search restaurants, cuisines, or pools..."
-              className="w-full pl-12 pr-4 py-4 bg-white/10 backdrop-blur-md rounded-2xl border border-white/10 text-white placeholder-gray-400 shadow-inner focus:outline-none focus:ring-2 focus:ring-primary/50 focus:bg-white/20 transition-all"
+              className="w-full pl-10 md:pl-12 pr-4 py-3 md:py-4 bg-white/10 backdrop-blur-md rounded-xl md:rounded-2xl border border-white/10 text-white placeholder-gray-400 shadow-inner focus:outline-none focus:ring-2 focus:ring-primary/50 focus:bg-white/20 transition-all text-sm md:text-base"
             />
           </div>
         </div>
       </div>
 
       {filtered.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-3xl shadow-soft border border-gray-50">
+        <div className="text-center py-16 bg-white rounded-xl md:rounded-3xl shadow-soft border border-gray-50">
           <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
             <Store className="w-10 h-10 text-gray-300" />
           </div>
@@ -208,7 +208,7 @@ const CampusRestaurants: React.FC = () => {
               <div
                 key={`${row.poolId}-${rest.id}`}
                 onClick={() => handleRestaurantClick(row)}
-                className="bg-white rounded-3xl shadow-soft border border-gray-50 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer group flex flex-col h-full"
+                className="bg-white rounded-xl md:rounded-3xl shadow-soft border border-gray-50 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer group flex flex-col h-full"
               >
                 <div className="h-48 overflow-hidden bg-gray-100 relative">
                   {rest.image ? (
@@ -227,12 +227,12 @@ const CampusRestaurants: React.FC = () => {
                     <Store className="w-16 h-16 opacity-20" />
                   </div>
 
-                  <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-xl shadow-sm text-xs font-bold text-gray-800 border border-gray-100">
+                  <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-lg md:rounded-xl shadow-sm text-xs font-bold text-gray-800 border border-gray-100">
                     Pool: {row.poolName || row.poolId}
                   </div>
 
                   {isDifferentPool && (
-                    <div className="absolute top-4 right-4 bg-red-500 text-white px-3 py-1.5 rounded-xl shadow-sm text-xs font-bold animate-pulse">
+                    <div className="absolute top-4 right-4 bg-red-500 text-white px-3 py-1.5 rounded-lg md:rounded-xl shadow-sm text-xs font-bold animate-pulse">
                       Different Pool
                     </div>
                   )}
@@ -276,9 +276,9 @@ const CampusRestaurants: React.FC = () => {
 
       {poolSwitchConfirm && (
         <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-4 bg-black/20 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-6 animate-in slide-in-from-bottom-4 duration-300">
+          <div className="w-full max-w-md bg-white rounded-xl md:rounded-3xl shadow-2xl p-6 animate-in slide-in-from-bottom-4 duration-300">
             <div className="flex items-start gap-4 mb-6">
-              <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center flex-shrink-0">
+              <div className="w-12 h-12 rounded-xl md:rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center flex-shrink-0">
                 <AlertTriangle className="w-6 h-6 text-amber-500" />
               </div>
               <div>

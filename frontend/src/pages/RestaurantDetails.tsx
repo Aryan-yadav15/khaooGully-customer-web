@@ -91,10 +91,10 @@ const RestaurantDetails: React.FC = () => {
   if (!restaurant) return <div>Restaurant not found</div>;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
       <button 
         onClick={() => navigate(-1)}
-        className="flex items-center gap-2 text-gray-500 hover:text-primary mb-8 text-sm font-bold transition-colors"
+        className="flex items-center gap-2 text-gray-500 hover:text-primary mb-4 md:mb-8 text-sm font-bold transition-colors"
       >
         <ArrowLeft className="w-4 h-4" /> Back to Restaurants
       </button>
@@ -102,31 +102,31 @@ const RestaurantDetails: React.FC = () => {
       <div className="grid lg:grid-cols-12 gap-8">
         {/* Left Column: Restaurant Info & Menu */}
         <div className="lg:col-span-8">
-          <div className="bg-white rounded-3xl p-8 shadow-soft border border-gray-50 mb-8">
+          <div className="bg-white rounded-xl md:rounded-3xl p-5 md:p-8 shadow-soft border border-gray-50 mb-6 md:mb-8">
             <div className="flex flex-col md:flex-row justify-between items-start gap-6">
-              <div>
-                <h1 className="text-4xl font-bold text-gray-900 mb-2">{restaurant.name}</h1>
-                <p className="text-gray-500 mb-4 font-medium">{(restaurant.cuisine || []).join(', ')}</p>
+              <div className="w-full md:w-auto">
+                <h1 className="text-2xl md:text-4xl font-bold text-gray-900 mb-2 leading-tight">{restaurant.name}</h1>
+                <p className="text-gray-500 mb-4 font-medium text-sm md:text-base">{(restaurant.cuisine || []).join(', ')}</p>
                 <div className="flex items-center gap-2 text-gray-400 text-sm">
-                  <MapPin className="w-4 h-4" />
-                  <span>{restaurant.location || 'Infocity'}</span>
+                  <MapPin className="w-4 h-4 flex-shrink-0" />
+                  <span className="truncate">{restaurant.location || 'Infocity'}</span>
                 </div>
               </div>
 
-              <div className="flex gap-3 bg-gray-50 p-2 rounded-2xl">
-                <div className="text-center px-4 py-2 bg-white rounded-xl shadow-sm">
-                  <div className="flex items-center justify-center gap-1 font-bold text-primary text-lg">
-                    {restaurant.rating} <Star className="w-4 h-4 fill-current" />
+              <div className="w-full md:w-auto grid grid-cols-3 gap-2 md:flex md:gap-3 bg-gray-50 p-2 rounded-2xl">
+                <div className="text-center px-2 md:px-4 py-2 bg-white rounded-xl shadow-sm">
+                  <div className="flex items-center justify-center gap-1 font-bold text-primary text-base md:text-lg">
+                    {restaurant.rating} <Star className="w-3 h-3 md:w-4 md:h-4 fill-current" />
                   </div>
-                  <div className="text-[10px] text-gray-400 uppercase tracking-wider font-bold mt-1">Rating</div>
+                  <div className="text-[8px] md:text-[10px] text-gray-400 uppercase tracking-wider font-bold mt-1">Rating</div>
                 </div>
-                <div className="text-center px-4 py-2 bg-white rounded-xl shadow-sm">
-                  <div className="font-bold text-gray-900 text-lg">{restaurant.deliveryTime}</div>
-                  <div className="text-[10px] text-gray-400 uppercase tracking-wider font-bold mt-1">Mins</div>
+                <div className="text-center px-2 md:px-4 py-2 bg-white rounded-xl shadow-sm">
+                  <div className="font-bold text-gray-900 text-base md:text-lg">{restaurant.deliveryTime}</div>
+                  <div className="text-[8px] md:text-[10px] text-gray-400 uppercase tracking-wider font-bold mt-1">Mins</div>
                 </div>
-                <div className="text-center px-4 py-2 bg-white rounded-xl shadow-sm">
-                  <div className="font-bold text-gray-900 text-lg">₹{restaurant.costForTwo / 100}</div>
-                  <div className="text-[10px] text-gray-400 uppercase tracking-wider font-bold mt-1">For Two</div>
+                <div className="text-center px-2 md:px-4 py-2 bg-white rounded-xl shadow-sm">
+                  <div className="font-bold text-gray-900 text-base md:text-lg">₹{(restaurant.costForTwo || 0) / 100}</div>
+                  <div className="text-[8px] md:text-[10px] text-gray-400 uppercase tracking-wider font-bold mt-1">For Two</div>
                 </div>
               </div>
             </div>
@@ -185,14 +185,14 @@ const RestaurantDetails: React.FC = () => {
                   )}
                 </div>
               ) : (
-                <div className="grid md:grid-cols-2 gap-6">
+                <div className="grid md:grid-cols-2 gap-4 md:gap-6">
                   {filteredMenu.map((dish) => {
                   const quantity = getQuantityInCart(dish.id);
                   
                   return (
-                    <div key={dish.id} className="bg-white p-5 rounded-3xl shadow-soft border border-gray-50 flex flex-col justify-between group hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
-                      <div className="flex gap-4 mb-4">
-                        <div className="w-24 h-24 bg-gray-100 rounded-2xl overflow-hidden flex-shrink-0 relative">
+                    <div key={dish.id} className="bg-white p-4 md:p-5 rounded-xl md:rounded-3xl shadow-soft border border-gray-50 flex flex-col justify-between group hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+                      <div className="flex gap-3 md:gap-4 mb-3 md:mb-4">
+                        <div className="w-20 h-20 md:w-24 md:h-24 bg-gray-100 rounded-xl md:rounded-2xl overflow-hidden flex-shrink-0 relative">
                           {dish.image ? (
                             <img src={dish.image} alt={dish.name} className="w-full h-full object-cover" />
                           ) : (
@@ -203,25 +203,25 @@ const RestaurantDetails: React.FC = () => {
                         </div>
                         
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-bold text-lg text-gray-900 mb-1 leading-tight truncate">{dish.name}</h3>
-                          <p className="text-sm text-gray-500 line-clamp-2 mb-2 h-10">{dish.description}</p>
+                          <h3 className="font-bold text-base md:text-lg text-gray-900 mb-1 leading-tight truncate">{dish.name}</h3>
+                          <p className="text-xs md:text-sm text-gray-500 line-clamp-2 mb-2 h-8 md:h-10">{dish.description}</p>
                           <div className="flex items-center gap-2">
-                             <span className="text-lg font-bold text-gray-900">₹{dish.price / 100}</span>
+                             <span className="text-base md:text-lg font-bold text-gray-900">₹{dish.price / 100}</span>
                              
                              {dish.rating && (
-                               <div className="flex items-center gap-1 bg-amber-50 px-2 py-1 rounded-lg border border-amber-100">
-                                 <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                                 <span className="text-[10px] font-bold text-amber-700">{dish.rating}</span>
+                               <div className="flex items-center gap-1 bg-amber-50 px-1.5 py-0.5 md:px-2 md:py-1 rounded-lg border border-amber-100">
+                                 <Star className="w-2.5 h-2.5 md:w-3 md:h-3 fill-amber-400 text-amber-400" />
+                                 <span className="text-[9px] md:text-[10px] font-bold text-amber-700">{dish.rating}</span>
                                </div>
                              )}
                              
-                             <div className={`flex items-center justify-center px-2 py-1 rounded-lg border ${dish.veg ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100'}`}>
+                             <div className={`flex items-center justify-center px-1.5 py-0.5 md:px-2 md:py-1 rounded-lg border ${dish.veg ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100'}`}>
                                {dish.veg ? (
-                                  <div className="w-3 h-3 border border-green-600 rounded-sm flex items-center justify-center p-0.5">
+                                  <div className="w-2.5 h-2.5 md:w-3 md:h-3 border border-green-600 rounded-sm flex items-center justify-center p-0.5">
                                     <div className="w-full h-full bg-green-600 rounded-full"></div>
                                   </div>
                                 ) : (
-                                  <div className="w-3 h-3 border border-red-600 rounded-sm flex items-center justify-center p-0.5">
+                                  <div className="w-2.5 h-2.5 md:w-3 md:h-3 border border-red-600 rounded-sm flex items-center justify-center p-0.5">
                                     <div className="w-full h-full bg-red-600 rounded-full"></div>
                                   </div>
                                 )}
@@ -230,28 +230,28 @@ const RestaurantDetails: React.FC = () => {
                         </div>
                       </div>
 
-                      <div className="mt-auto pt-4 border-t border-gray-50">
+                      <div className="mt-auto pt-3 md:pt-4 border-t border-gray-50">
                         {quantity === 0 ? (
                           <button
                             onClick={() => handleAdd(dish)}
-                            className="w-full bg-primary-light text-primary-dark font-bold py-3 rounded-xl hover:bg-primary hover:text-white transition-all flex items-center justify-center gap-2 group-hover:shadow-lg group-hover:shadow-primary/20"
+                            className="w-full bg-primary-light text-primary-dark font-bold py-2.5 md:py-3 rounded-xl hover:bg-primary hover:text-white transition-all flex items-center justify-center gap-2 group-hover:shadow-lg group-hover:shadow-primary/20 text-sm md:text-base"
                           >
-                            Add to Cart <Plus className="w-4 h-4" />
+                            Add to Cart <Plus className="w-3 h-3 md:w-4 md:h-4" />
                           </button>
                         ) : (
                           <div className="flex items-center justify-between bg-gray-900 text-white rounded-xl p-1 shadow-lg shadow-gray-900/20">
                             <button 
                               onClick={() => handleDecrement(dish.id)} 
-                              className="w-10 h-10 flex items-center justify-center hover:bg-white/20 rounded-lg transition-colors"
+                              className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center hover:bg-white/20 rounded-lg transition-colors"
                             >
-                              <Minus className="w-4 h-4" />
+                              <Minus className="w-3 h-3 md:w-4 md:h-4" />
                             </button>
-                            <span className="font-bold text-lg w-8 text-center">{quantity}</span>
+                            <span className="font-bold text-base md:text-lg w-6 md:w-8 text-center">{quantity}</span>
                             <button 
                               onClick={() => handleIncrement(dish.id)} 
-                              className="w-10 h-10 flex items-center justify-center hover:bg-white/20 rounded-lg transition-colors"
+                              className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center hover:bg-white/20 rounded-lg transition-colors"
                             >
-                              <Plus className="w-4 h-4" />
+                              <Plus className="w-3 h-3 md:w-4 md:h-4" />
                             </button>
                           </div>
                         )}
