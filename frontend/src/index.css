@@ -8,6 +8,17 @@
   font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
 }
 
+/* 
+  Global Scale Adjustment for Desktop 
+  User requested ~80% zoom feel on desktop.
+  Default 16px * 0.8125 = 13px.
+*/
+@media (min-width: 1024px) {
+  html {
+    font-size: 13px;
+  }
+}
+
 body {
   @apply bg-surface-background text-gray-800 antialiased;
 }

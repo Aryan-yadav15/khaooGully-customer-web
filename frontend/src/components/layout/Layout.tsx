@@ -40,6 +40,10 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     return /^\/pool\/[^/]+\/restaurant\/[^/]+$/.test(location.pathname);
   }, [location.pathname]);
 
+  const isOrderDetailsRoute = useMemo(() => {
+    return /^\/order\/[^/]+$/.test(location.pathname);
+  }, [location.pathname]);
+
   const cartSubtotalText = useMemo(() => {
     const rupees = cartTotal / 100;
     return `₹${rupees.toFixed(0)}`;
@@ -87,7 +91,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     };
   }, [user]);
 
-  const showIncomingOrderFooter = !!user && !!activeOrder;
+  const showIncomingOrderFooter = !!user && !!activeOrder && !isRestaurantMenuRoute && !isOrderDetailsRoute;
   const showMenuCartFooter = isRestaurantMenuRoute && itemCount > 0;
   const menuCartFooterBottomClass = showIncomingOrderFooter ? 'bottom-24 md:bottom-32' : 'bottom-4';
   const needsBottomPadding = showIncomingOrderFooter || showMenuCartFooter;

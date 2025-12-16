@@ -176,6 +176,7 @@ def send_orders_to_backend(orders: List[Dict[str, Any]], backend_url: str, api_k
     for order in orders:
         formatted_orders.append({
             "order_id": order.get("order_id") or order.get("id"),  # order_details view uses 'order_id'
+            "pool_id": order.get("pool_id"),
             "restaurant_id": order["restaurant_id"],
             "restaurant_phone": order.get("restaurant_phone"),
             "customer_name": order.get("customer_name", "Unknown"),

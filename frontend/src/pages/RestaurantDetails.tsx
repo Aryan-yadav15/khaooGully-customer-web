@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Star, Plus, Minus, Loader2, MapPin, ArrowLeft, Search } from 'lucide-react';
+import { Star, Plus, Minus, Loader2, MapPin, ArrowLeft, Search, Menu, X, ChevronDown } from 'lucide-react';
 import { getRestaurantDetails, getRestaurantMenu } from '../services/api';
 import { useCart } from '../context/CartContext';
 import type { Restaurant, Dish } from '../types';
@@ -12,8 +12,17 @@ const RestaurantDetails: React.FC = () => {
   const [menuSearch, setMenuSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'menu' | 'reviews'>('menu');
-  const { addToCart, cart, updateQuantity, removeFromCart, refreshCart, syncPendingOperations, hasPendingOperations } = useCart();
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+  const { addToCart, cart, updateQuantity, removeFromCart, refreshCart, syncPendingOperations, hasPendingOperations, itemCount } = useCart();
   const navigate = useNavigate();
+
+  const toggleSection = (category: string) => {
+    setCollapsedSections(prev => ({
+      ...prev,
+      [category]: !prev[category]
+    }));
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -53,7 +62,6 @@ const RestaurantDetails: React.FC = () => {
     const item = cart.items.find(item => item.dishId === dishId && item.restaurantId === restaurantId);
     return item ? item.quantity : 0;
   };
-
   const normalizedMenuSearch = menuSearch.trim().toLowerCase();
 
   const filteredMenu = useMemo(() => {
@@ -65,6 +73,50 @@ const RestaurantDetails: React.FC = () => {
       return nameMatch || descMatch || tagMatch;
     });
   }, [menu, normalizedMenuSearch]);
+
+  const menuSections = useMemo(() => {
+    const sections: Record<string, Dish[]> = {};
+    let hasTags = false;
+
+    filteredMenu.forEach(dish => {
+      // Use the first tag as the primary category, or 'Other' if no tags
+      const category = (dish.tags && dish.tags.length > 0) ? dish.tags[0] : 'Other';
+      if (dish.tags && dish.tags.length > 0) hasTags = true;
+      
+      if (!sections[category]) {
+        sections[category] = [];
+      }
+      sections[category].push(dish);
+    });
+
+    // If no tags at all in the entire menu, just return one section
+    if (!hasTags) {
+      return { 'All Items': filteredMenu };
+    }
+
+    return sections;
+  }, [filteredMenu]);
+
+  const scrollToCategory = (category: string) => {
+    setShowCategoryModal(false);
+    
+    // Small delay to allow modal close animation to start smoothly before scrolling
+    setTimeout(() => {
+      const element = document.getElementById(`category-${category}`);
+      if (element) {
+        const offset = 100; // Adjust for sticky header
+        const bodyRect = document.body.getBoundingClientRect().top;
+        const elementRect = element.getBoundingClientRect().top;
+        const elementPosition = elementRect - bodyRect;
+        const offsetPosition = elementPosition - offset;
+
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth'
+        });
+      }
+    }, 100);
+  };
 
   const handleAdd = async (dish: Dish) => {
     if (poolId && restaurantId) {
@@ -195,79 +247,102 @@ const RestaurantDetails: React.FC = () => {
                   )}
                 </div>
               ) : (
-                <div className="grid md:grid-cols-2 gap-4 md:gap-6">
-                  {filteredMenu.map((dish) => {
-                  const quantity = getQuantityInCart(dish.id);
-                  
-                  return (
-                    <div key={dish.id} className="bg-white p-4 md:p-5 rounded-xl md:rounded-3xl shadow-soft border border-gray-50 flex flex-col justify-between group hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
-                      <div className="flex gap-3 md:gap-4 mb-3 md:mb-4">
-                        <div className="w-20 h-20 md:w-24 md:h-24 bg-gray-100 rounded-xl md:rounded-2xl overflow-hidden flex-shrink-0 relative">
-                          {dish.image ? (
-                            <img src={dish.image} alt={dish.name} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-gray-50 text-gray-300">
-                              <div className="w-8 h-8 rounded-full border-2 border-current opacity-20"></div>
+                <div className="space-y-10">
+                  {Object.entries(menuSections).map(([category, items]) => {
+                    const isCollapsed = collapsedSections[category];
+                    return (
+                      <div key={category} id={`category-${category}`} className="scroll-mt-28">
+                        <div className="sticky top-[4.5rem] md:top-[6rem] z-20 -mx-0 px-12 md:mx-0 md:px-4  mb-4 bg-gray-100 backdrop-blur-sm py-2 border-[2px] rounded-2xl border-gray-200/50">
+                          <button 
+                            onClick={() => toggleSection(category)}
+                            className="w-full flex justify-between items-center gap-3 group"
+                          >
+                            <h3 className="text-sm md:text-md font-bold text-gray-600">{category} ({items.length})</h3>
+                            <div className={`text-gray-500 transition-transform duration-300 ${isCollapsed ? '' : 'rotate-180'}`}>
+                               <ChevronDown />
                             </div>
-                          )}
+                          </button>
                         </div>
                         
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-bold text-base md:text-lg text-gray-900 mb-1 leading-tight line-clamp-2 break-words">{dish.name}</h3>
-                          <p className="text-xs md:text-sm text-gray-500 line-clamp-2 mb-2 h-8 md:h-10">{dish.description}</p>
-                          <div className="flex items-center gap-2">
-                             <span className="text-base md:text-lg font-bold text-gray-900">₹{dish.price / 100}</span>
-                             
-                             {dish.rating && (
-                               <div className="flex items-center gap-1 bg-amber-50 px-1.5 py-0.5 md:px-2 md:py-1 rounded-lg border border-amber-100">
-                                 <Star className="w-2.5 h-2.5 md:w-3 md:h-3 fill-amber-400 text-amber-400" />
-                                 <span className="text-[9px] md:text-[10px] font-bold text-amber-700">{dish.rating}</span>
-                               </div>
-                             )}
-                             
-                             <div className={`flex items-center justify-center px-1.5 py-0.5 md:px-2 md:py-1 rounded-lg border ${dish.veg ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100'}`}>
-                               {dish.veg ? (
-                                  <div className="w-2.5 h-2.5 md:w-3 md:h-3 border border-green-600 rounded-sm flex items-center justify-center p-0.5">
-                                    <div className="w-full h-full bg-green-600 rounded-full"></div>
+                        {!isCollapsed && (
+                          <div className="grid md:grid-cols-2 gap-4 md:gap-6">
+                            {items.map((dish) => {
+                              const quantity = getQuantityInCart(dish.id);
+                              
+                              return (
+                                <div key={dish.id} className="bg-white p-4 md:p-5 rounded-xl md:rounded-3xl shadow-soft border border-gray-50 flex flex-col justify-between group hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+                                  <div className="flex gap-3 md:gap-4 mb-3 md:mb-4">
+                                    <div className="w-20 h-20 md:w-24 md:h-24 bg-gray-100 rounded-xl md:rounded-2xl overflow-hidden flex-shrink-0 relative">
+                                      {dish.image ? (
+                                        <img src={dish.image} alt={dish.name} className="w-full h-full object-cover" />
+                                      ) : (
+                                        <div className="w-full h-full flex items-center justify-center bg-gray-50 text-gray-300">
+                                          <div className="w-8 h-8 rounded-full border-2 border-current opacity-20"></div>
+                                        </div>
+                                      )}
+                                    </div>
+                                    
+                                    <div className="flex-1 min-w-0">
+                                      <h3 className="font-bold text-base md:text-lg text-gray-900 mb-1 leading-tight line-clamp-2 break-words">{dish.name}</h3>
+                                      <p className="text-xs md:text-sm text-gray-500 line-clamp-2 mb-2 h-8 md:h-10">{dish.description}</p>
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-base md:text-lg font-bold text-gray-900">₹{dish.price / 100}</span>
+                                        
+                                        {dish.rating && (
+                                          <div className="flex items-center gap-1 bg-amber-50 px-1.5 py-0.5 md:px-2 md:py-1 rounded-lg border border-amber-100">
+                                            <Star className="w-2.5 h-2.5 md:w-3 md:h-3 fill-amber-400 text-amber-400" />
+                                            <span className="text-[9px] md:text-[10px] font-bold text-amber-700">{dish.rating}</span>
+                                          </div>
+                                        )}
+                                        
+                                        <div className={`flex items-center justify-center px-1.5 py-0.5 md:px-2 md:py-1 rounded-lg border ${dish.veg ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100'}`}>
+                                          {dish.veg ? (
+                                              <div className="w-2.5 h-2.5 md:w-3 md:h-3 border border-green-600 rounded-sm flex items-center justify-center p-0.5">
+                                                <div className="w-full h-full bg-green-600 rounded-full"></div>
+                                              </div>
+                                            ) : (
+                                              <div className="w-2.5 h-2.5 md:w-3 md:h-3 border border-red-600 rounded-sm flex items-center justify-center p-0.5">
+                                                <div className="w-full h-full bg-red-600 rounded-full"></div>
+                                              </div>
+                                            )}
+                                        </div>
+                                      </div>
+                                    </div>
                                   </div>
-                                ) : (
-                                  <div className="w-2.5 h-2.5 md:w-3 md:h-3 border border-red-600 rounded-sm flex items-center justify-center p-0.5">
-                                    <div className="w-full h-full bg-red-600 rounded-full"></div>
-                                  </div>
-                                )}
-                             </div>
-                          </div>
-                        </div>
-                      </div>
 
-                      <div className="mt-auto pt-3 md:pt-4 border-t border-gray-50">
-                        {quantity === 0 ? (
-                          <button
-                            onClick={() => handleAdd(dish)}
-                            className="w-full bg-primary-light text-primary-dark font-bold py-2.5 md:py-3 rounded-xl hover:bg-primary hover:text-white transition-all flex items-center justify-center gap-2 group-hover:shadow-lg group-hover:shadow-primary/20 text-sm md:text-base"
-                          >
-                            Add to Cart <Plus className="w-3 h-3 md:w-4 md:h-4" />
-                          </button>
-                        ) : (
-                          <div className="flex items-center justify-between bg-gray-900 text-white rounded-xl p-1 shadow-lg shadow-gray-900/20">
-                            <button 
-                              onClick={() => handleDecrement(dish.id)} 
-                              className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center hover:bg-white/20 rounded-lg transition-colors"
-                            >
-                              <Minus className="w-3 h-3 md:w-4 md:h-4" />
-                            </button>
-                            <span className="font-bold text-base md:text-lg w-6 md:w-8 text-center">{quantity}</span>
-                            <button 
-                              onClick={() => handleIncrement(dish.id)} 
-                              className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center hover:bg-white/20 rounded-lg transition-colors"
-                            >
-                              <Plus className="w-3 h-3 md:w-4 md:h-4" />
-                            </button>
+                                  <div className="mt-auto pt-3 md:pt-4 border-t border-gray-50">
+                                    {quantity === 0 ? (
+                                      <button
+                                        onClick={() => handleAdd(dish)}
+                                        className="w-full bg-primary-light text-primary-dark font-bold py-2.5 md:py-3 rounded-xl hover:bg-primary hover:text-white transition-all flex items-center justify-center gap-2 group-hover:shadow-lg group-hover:shadow-primary/20 text-sm md:text-base"
+                                      >
+                                        Add to Cart <Plus className="w-3 h-3 md:w-4 md:h-4" />
+                                      </button>
+                                    ) : (
+                                      <div className="flex items-center justify-between bg-gray-900 text-white rounded-xl p-1 shadow-lg shadow-gray-900/20">
+                                        <button 
+                                          onClick={() => handleDecrement(dish.id)} 
+                                          className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center hover:bg-white/20 rounded-lg transition-colors"
+                                        >
+                                          <Minus className="w-3 h-3 md:w-4 md:h-4" />
+                                        </button>
+                                        <span className="font-bold text-base md:text-lg w-6 md:w-8 text-center">{quantity}</span>
+                                        <button 
+                                          onClick={() => handleIncrement(dish.id)} 
+                                          className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center hover:bg-white/20 rounded-lg transition-colors"
+                                        >
+                                          <Plus className="w-3 h-3 md:w-4 md:h-4" />
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
                         )}
                       </div>
-                    </div>
-                  );
+                    );
                   })}
                 </div>
               )}
@@ -341,6 +416,71 @@ const RestaurantDetails: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Floating Menu Button */}
+      {filteredMenu.length > 0 && (
+        <div className={`fixed right-6 z-40 transition-all duration-300 ${itemCount > 0 ? 'bottom-24' : 'bottom-6'}`}>
+          <button
+            onClick={() => setShowCategoryModal(true)}
+            className="bg-gray-900 text-white px-6 py-3 rounded-full shadow-lg flex items-center gap-2 font-bold animate-in fade-in slide-in-from-bottom-4 hover:bg-gray-800 transition-colors"
+          >
+            <Menu className="w-5 h-5" />
+            Menu
+          </button>
+        </div>
+      )}
+
+      {/* Category Modal */}
+      {showCategoryModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end justify-center sm:items-center p-4 animate-in fade-in duration-200">
+          <div 
+            className="bg-white w-full max-w-md rounded-[2rem] shadow-2xl animate-in slide-in-from-bottom-10 duration-300 sm:zoom-in-95 overflow-hidden flex flex-col max-h-[80vh] will-change-transform"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between bg-white sticky top-0 z-10">
+              <div>
+                <h3 className="text-xl font-bold text-gray-900">Browse Menu</h3>
+                <p className="text-xs text-gray-500 font-medium mt-0.5">Select a category to jump to</p>
+              </div>
+              <button 
+                onClick={() => setShowCategoryModal(false)}
+                className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-full transition-colors text-gray-500 hover:text-gray-900"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="overflow-y-auto p-4 custom-scrollbar">
+              <div className="grid gap-2">
+                {Object.entries(menuSections).map(([category, items]) => (
+                  <button
+                    key={category}
+                    onClick={() => scrollToCategory(category)}
+                    className="w-full flex items-center justify-between p-4 hover:bg-gray-50 active:bg-gray-100 rounded-2xl transition-all group border border-transparent hover:border-gray-100"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-1.5 h-1.5 rounded-full bg-gray-300 group-hover:bg-primary transition-colors"></div>
+                      <span className="font-bold text-gray-700 group-hover:text-gray-900 text-left text-base">{category}</span>
+                    </div>
+                    <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-bold group-hover:bg-primary-light group-hover:text-primary-dark transition-colors">
+                      {items.length}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+            
+            <div className="p-4 border-t border-gray-50 bg-gray-50/50 text-center">
+              <button 
+                onClick={() => setShowCategoryModal(false)}
+                className="text-sm font-bold text-gray-500 hover:text-gray-900 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

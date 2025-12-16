@@ -105,14 +105,26 @@ const OrderTracking: React.FC = () => {
         </div>
         <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 tracking-tight">Order Placed Successfully!</h1>
         <p className="text-gray-500 font-medium mb-2">Order ID: <span className="font-mono text-gray-700">#{order.orderId.slice(0, 8)}</span></p>
-        {order.deliveryWindow && (
-          <div className="inline-flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-xl border border-gray-100 mt-2">
-            <Clock className="w-4 h-4 text-primary" />
-            <p className="text-sm font-medium text-gray-600">
-              Estimated Delivery: <span className="font-bold text-gray-900">{order.deliveryWindow}</span>
-            </p>
-          </div>
-        )}
+        
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-4">
+          {order.deliveryWindow && (
+            <div className="inline-flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-xl border border-gray-100">
+              <Clock className="w-4 h-4 text-primary" />
+              <p className="text-sm font-medium text-gray-600">
+                Estimated Delivery: <span className="font-bold text-gray-900">{order.deliveryWindow}</span>
+              </p>
+            </div>
+          )}
+          
+          {order.deliveryHotspot && (
+            <div className="inline-flex items-center gap-2 bg-primary-light/30 px-4 py-2 rounded-xl border border-primary/20">
+              <MapPin className="w-4 h-4 text-primary" />
+              <p className="text-sm font-medium text-gray-600">
+                Pickup Location: <span className="font-bold text-gray-900">{order.deliveryHotspot}</span>
+              </p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Delivery Details Card (Conditional) */}

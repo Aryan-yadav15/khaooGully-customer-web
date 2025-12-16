@@ -275,8 +275,8 @@ const CampusRestaurants: React.FC = () => {
       )}
 
       {poolSwitchConfirm && (
-        <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-4 bg-black/20 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="w-full max-w-md bg-white rounded-xl md:rounded-3xl shadow-2xl p-6 animate-in slide-in-from-bottom-4 duration-300">
+        <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-md bg-white rounded-xl md:rounded-3xl shadow-2xl p-6 animate-in zoom-in-95 duration-300">
             <div className="flex items-start gap-4 mb-6">
               <div className="w-12 h-12 rounded-xl md:rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center flex-shrink-0">
                 <AlertTriangle className="w-6 h-6 text-amber-500" />
