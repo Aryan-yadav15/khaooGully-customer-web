@@ -28,7 +28,7 @@ const Cart: React.FC = () => {
       
       // Only refresh if we have items with missing restaurant names
       const hasMissingRestaurantName = cart.items.some((it) => !(it.restaurantName || '').trim());
-      if (hasMissingRestaurantName) {
+      if (hasMissingRestaurantName && cart.poolId) {
         console.log('[Cart] Refreshing cart to get missing data...');
         await refreshCart(cart.poolId);
         console.log('[Cart] Refresh complete');
