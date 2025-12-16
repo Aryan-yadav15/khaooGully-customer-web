@@ -206,17 +206,17 @@ const OrderTracking: React.FC = () => {
 
       {/* Driver Details & OTP Card */}
       {(order.driverName || order.driverPhone || order.otp) && (
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl shadow-sm border border-blue-100 p-6 mb-8">
+        <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl shadow-sm border border-green-100 p-6 mb-8">
           <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <span className="text-blue-600">🚗</span>
+            <span className="text-green-600">🚗</span>
             Delivery Details
           </h2>
           
           <div className="space-y-4">
             {order.driverName && (
               <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                  <span className="text-blue-600 font-bold">👤</span>
+                <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                  <span className="text-green-600 font-bold">👤</span>
                 </div>
                 <div>
                   <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Driver Name</p>

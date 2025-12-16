@@ -6,6 +6,7 @@ export interface Campus {
   latitude: number;
   longitude: number;
   isActive: boolean;
+  activePoolCount?: number;
   createdAt?: string;
   updatedAt?: string;
 }

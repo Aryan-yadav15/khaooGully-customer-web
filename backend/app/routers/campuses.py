@@ -21,14 +21,14 @@ async def GetCampuses(
     Db: Client = Depends(GetSupabaseAdmin)
 ):
     """
-    Retrieves list of campuses.
+    Retrieves list of campuses with active pool counts.
     
     Args:
         isActive: Filter by active status (default: True)
         Db: Supabase client instance
         
     Returns:
-        List[CampusResponse]: List of campuses
+        List[CampusResponse]: List of campuses with activePoolCount
     """
     QueryBuilder = Db.table("campuses").select("*")
     
@@ -37,7 +37,55 @@ async def GetCampuses(
     
     Response = QueryBuilder.order("name").execute()
     
-    return [CampusResponse(**Item) for Item in Response.data]
+    # Get all active pools and compute their status
+    PoolCountResponse = Db.table("order_pools").select("campus_id, manual_status, collection_start, collection_end").eq("is_active", True).execute()
+    
+    # Count only pools that are currently open or scheduled (not closed)
+    from datetime import datetime, timezone
+    
+    pool_counts = {}
+    now = datetime.now(timezone.utc)
+    
+    for pool in (PoolCountResponse.data or []):
+        campus_id = pool.get("campus_id")
+        if not campus_id:
+            continue
+            
+        # Check manual status first
+        manual_status = pool.get("manual_status", "open")
+        if manual_status in ["closed", "synced"]:
+            continue
+            
+        # Check time-based status
+        try:
+            collection_start_str = pool.get("collection_start", "")
+            collection_end_str = pool.get("collection_end", "")
+            
+            if not collection_start_str or not collection_end_str:
+                continue
+                
+            collection_start = datetime.fromisoformat(collection_start_str.replace("Z", "+00:00"))
+            collection_end = datetime.fromisoformat(collection_end_str.replace("Z", "+00:00"))
+            
+            if collection_start.tzinfo is None:
+                collection_start = collection_start.replace(tzinfo=timezone.utc)
+            if collection_end.tzinfo is None:
+                collection_end = collection_end.replace(tzinfo=timezone.utc)
+            
+            # Only count if pool is currently open or scheduled (not ended)
+            if collection_end >= now:
+                pool_counts[campus_id] = pool_counts.get(campus_id, 0) + 1
+        except (ValueError, TypeError):
+            continue
+    
+    # Add pool counts to campus data
+    campuses_with_counts = []
+    for item in Response.data:
+        campus_data = dict(item)
+        campus_data["activePoolCount"] = pool_counts.get(item["id"], 0)
+        campuses_with_counts.append(CampusResponse(**campus_data))
+    
+    return campuses_with_counts
 
 
 @Router.get("/{campusId}", response_model=CampusResponse)
@@ -46,14 +94,14 @@ async def GetCampusById(
     Db: Client = Depends(GetSupabaseAdmin)
 ):
     """
-    Retrieves a specific campus by ID.
+    Retrieves a specific campus by ID with active pool count.
     
     Args:
         campusId: Campus UUID
         Db: Supabase client instance
         
     Returns:
-        CampusResponse: Campus details
+        CampusResponse: Campus details with activePoolCount
         
     Raises:
         NotFoundException: If campus not found
@@ -63,7 +111,46 @@ async def GetCampusById(
     if not Response.data:
         raise NotFoundException(Detail=f"Campus with ID {campusId} not found")
     
-    return CampusResponse(**Response.data[0])
+    # Get active pools for this campus and compute their status
+    PoolCountResponse = Db.table("order_pools").select("manual_status, collection_start, collection_end").eq("campus_id", campusId).eq("is_active", True).execute()
+    
+    from datetime import datetime, timezone
+    
+    active_count = 0
+    now = datetime.now(timezone.utc)
+    
+    for pool in (PoolCountResponse.data or []):
+        # Check manual status first
+        manual_status = pool.get("manual_status", "open")
+        if manual_status in ["closed", "synced"]:
+            continue
+            
+        # Check time-based status
+        try:
+            collection_start_str = pool.get("collection_start", "")
+            collection_end_str = pool.get("collection_end", "")
+            
+            if not collection_start_str or not collection_end_str:
+                continue
+                
+            collection_start = datetime.fromisoformat(collection_start_str.replace("Z", "+00:00"))
+            collection_end = datetime.fromisoformat(collection_end_str.replace("Z", "+00:00"))
+            
+            if collection_start.tzinfo is None:
+                collection_start = collection_start.replace(tzinfo=timezone.utc)
+            if collection_end.tzinfo is None:
+                collection_end = collection_end.replace(tzinfo=timezone.utc)
+            
+            # Only count if pool is currently open or scheduled (not ended)
+            if collection_end >= now:
+                active_count += 1
+        except (ValueError, TypeError):
+            continue
+    
+    campus_data = dict(Response.data[0])
+    campus_data["activePoolCount"] = active_count
+    
+    return CampusResponse(**campus_data)
 
 
 @Router.get("/{campusId}/restaurants", response_model=List[CampusRestaurantPoolMapping], response_model_by_alias=False)

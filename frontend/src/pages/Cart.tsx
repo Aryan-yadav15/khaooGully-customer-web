@@ -7,21 +7,30 @@ import type { Pool } from '../types';
 import { formatLocalTime } from '../utils/datetime';
 
 const Cart: React.FC = () => {
-  const { cart, updateQuantity, removeFromCart, cartTotal, clearCart, loading, refreshCart } = useCart();
+  const { cart, updateQuantity, removeFromCart, cartTotal, clearCart, loading, refreshCart, syncPendingOperations, hasPendingOperations, syncing } = useCart();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pool, setPool] = useState<Pool | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
 
-  // Ensure cart details (like restaurantName) are hydrated
+  // Sync pending operations when cart page loads
   useEffect(() => {
     if (!cart.poolId) return;
+
+    // Sync any pending operations from rapid adds
+    const syncOnLoad = async () => {
+      if (hasPendingOperations()) {
+        await syncPendingOperations();
+      }
+    };
+    
+    void syncOnLoad();
 
     const hasMissingRestaurantName = cart.items.some((it) => !(it.restaurantName || '').trim());
     if (hasMissingRestaurantName) {
       void refreshCart(cart.poolId);
     }
-  }, [cart.poolId, cart.items, refreshCart]);
+  }, [cart.poolId, cart.items, refreshCart, hasPendingOperations, syncPendingOperations]);
 
   // Fetch pool details (cart refresh is handled by CartContext)
   useEffect(() => {
@@ -87,10 +96,31 @@ const Cart: React.FC = () => {
     }
   };
 
-  if (loading && cart.items.length === 0) {
+  // Show skeleton when syncing pending operations
+  if (syncing || (loading && cart.items.length === 0)) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-lime-600" />
+      <div className="max-w-5xl mx-auto px-4 py-8">
+        <div className="bg-white rounded-lg shadow-md p-6 animate-pulse">
+          {/* Header skeleton */}
+          <div className="h-8 bg-gray-200 rounded w-1/3 mb-6"></div>
+          
+          {/* Items skeleton */}
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex gap-4 mb-4 pb-4 border-b">
+              <div className="w-20 h-20 bg-gray-200 rounded"></div>
+              <div className="flex-1">
+                <div className="h-5 bg-gray-200 rounded w-2/3 mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+              </div>
+              <div className="h-8 bg-gray-200 rounded w-24"></div>
+            </div>
+          ))}
+          
+          {/* Total skeleton */}
+          <div className="mt-6 pt-4 border-t">
+            <div className="h-6 bg-gray-200 rounded w-1/4 ml-auto"></div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -177,46 +207,46 @@ const Cart: React.FC = () => {
               </div>
               <div className="p-6">
                 {items.map((item) => (
-                  <div key={item.id} className="flex items-center justify-between gap-4 py-6 border-b border-gray-50 last:border-0 last:pb-0 first:pt-0">
-                    <div className="flex items-center gap-4">
-                      <div className="w-20 h-20 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0 border border-gray-100">
+                  <div key={item.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-4 sm:py-6 border-b border-gray-50 last:border-0 last:pb-0 first:pt-0">
+                    <div className="flex items-start sm:items-center gap-3 sm:gap-4 flex-1 min-w-0">
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0 border border-gray-100">
                         {item.dish.image ? (
                           <img src={item.dish.image} alt={item.dish.name} className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">No Image</div>
                         )}
                       </div>
-                      <div>
+                      <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           {item.dish.veg ? (
-                            <span className="w-4 h-4 border border-green-600 flex items-center justify-center p-0.5 rounded-sm">
+                            <span className="w-4 h-4 border border-green-600 flex items-center justify-center p-0.5 rounded-sm flex-shrink-0">
                               <span className="w-2 h-2 bg-green-600 rounded-full"></span>
                             </span>
                           ) : (
-                            <span className="w-4 h-4 border border-red-600 flex items-center justify-center p-0.5 rounded-sm">
+                            <span className="w-4 h-4 border border-red-600 flex items-center justify-center p-0.5 rounded-sm flex-shrink-0">
                               <span className="w-2 h-2 bg-red-600 rounded-full"></span>
                             </span>
                           )}
-                          <h4 className="font-bold text-gray-900 text-lg">{item.dish.name}</h4>
+                          <h4 className="font-bold text-gray-900 text-base sm:text-lg truncate">{item.dish.name}</h4>
                         </div>
-                        <p className="font-bold text-gray-900 text-lg">₹{item.price / 100}</p>
+                        <p className="font-bold text-gray-900 text-base sm:text-lg">₹{item.price / 100}</p>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-6">
-                      <div className="flex items-center bg-gray-50 rounded-lg border border-gray-200 h-10">
+                    <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto pl-[4.75rem] sm:pl-0">
+                      <div className="flex items-center bg-gray-50 rounded-lg border border-gray-200 h-9 sm:h-10">
                         <button
                           onClick={() => updateQuantity(item.id, Math.max(0, item.quantity - 1))}
-                          className="w-10 h-full flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-l-lg transition-colors"
+                          className="w-8 sm:w-10 h-full flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-l-lg transition-colors"
                         >
-                          <Minus className="w-4 h-4" />
+                          <Minus className="w-3 h-3 sm:w-4 sm:h-4" />
                         </button>
-                        <span className="w-8 text-center font-bold text-gray-900">{item.quantity}</span>
+                        <span className="w-8 text-center font-bold text-gray-900 text-sm sm:text-base">{item.quantity}</span>
                         <button
                           onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                          className="w-10 h-full flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-r-lg transition-colors"
+                          className="w-8 sm:w-10 h-full flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-r-lg transition-colors"
                         >
-                          <Plus className="w-4 h-4" />
+                          <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
                         </button>
                       </div>
                       <button

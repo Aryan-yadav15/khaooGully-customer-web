@@ -200,12 +200,16 @@ const CampusRestaurants: React.FC = () => {
                       src={rest.image}
                       alt={rest.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                      }}
                     />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-400 bg-gray-100">
-                      <Store className="w-12 h-12 opacity-20" />
-                    </div>
-                  )}
+                  ) : null}
+                  
+                  <div className={`w-full h-full flex items-center justify-center text-gray-400 bg-gray-100 ${rest.image ? 'hidden' : ''}`}>
+                    <Store className="w-12 h-12 opacity-20" />
+                  </div>
 
                   <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg shadow-sm text-xs font-bold text-gray-700">
                     Pool: {row.poolName || row.poolId}

@@ -7,7 +7,7 @@ import { getCustomerOrders } from '../../services/api';
 import type { CustomerOrderHistoryItem } from '../../types';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { itemCount, cartTotal } = useCart();
+  const { itemCount, cartTotal, syncing, hasPendingOperations } = useCart();
   const { user, isAdmin, signOut } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [activeOrder, setActiveOrder] = useState<CustomerOrderHistoryItem | null>(null);
@@ -81,9 +81,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
             <div className="bg-black rounded-md">
-               <img src="/LogoCircle.svg" alt="Khao Gully" className="w-12 h-12" />
+               <img src="/LogoCircle.svg" alt="Khaoo Gully" className="w-12 h-12" />
             </div>
-            <span className="text-xl font-bold text-gray-900">Khao Gully</span>
+            <span className="text-xl font-bold text-gray-900">Khaoo Gully</span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-8">
@@ -100,7 +100,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               <div className="relative">
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-medium"
+                  className="w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center text-sm font-medium"
                 >
                   {user.email?.charAt(0).toUpperCase()}
                 </button>
@@ -137,9 +137,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             )}
 
             <Link to="/cart" className="relative p-2 text-gray-400 hover:text-gray-600 transition-colors">
-              <ShoppingCart className="w-5 h-5" />
+              <ShoppingCart className={`w-5 h-5 ${hasPendingOperations() ? 'animate-pulse' : ''}`} />
               {itemCount > 0 && (
-                <span className="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center border-2 border-white">
+                <span className={`absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center border-2 border-white ${syncing ? 'animate-pulse' : ''}`}>
                   {itemCount}
                 </span>
               )}

@@ -40,6 +40,7 @@ class CampusResponse(CampusBase):
     
     id: str
     isActive: bool = Field(validation_alias="is_active")
+    activePoolCount: int = Field(default=0, description="Number of active pools for this campus")
     createdAt: datetime = Field(validation_alias="created_at")
     updatedAt: datetime = Field(validation_alias="updated_at")
     

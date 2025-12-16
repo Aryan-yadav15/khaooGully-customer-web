@@ -147,6 +147,11 @@ class OrderDetailResponse(BaseModel):
     cancelledAt: Optional[datetime] = Field(None, validation_alias="cancelled_at")
     cancellationReason: Optional[str] = Field(None, validation_alias="cancellation_reason")
     deliveredAt: Optional[datetime] = Field(None, validation_alias="delivered_at")
+
+    driverName: Optional[str] = Field(None, validation_alias="driver_name")
+    driverPhone: Optional[str] = Field(None, validation_alias="driver_phone")
+    otp: Optional[str] = Field(None, validation_alias="otp")
+
     deliveryWindow: str = Field(validation_alias="delivery_window")
     fleetbasePoolId: Optional[str] = Field(None, validation_alias="fleetbase_pool_id")
     orderedAt: datetime = Field(validation_alias="ordered_at")

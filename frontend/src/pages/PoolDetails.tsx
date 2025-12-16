@@ -79,7 +79,7 @@ const PoolDetails: React.FC = () => {
 
           <div className="flex flex-wrap gap-6 text-sm">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+              <div className="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center text-green-600">
                 <MapPin className="w-4 h-4" />
               </div>
               <div>

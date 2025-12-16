@@ -10,9 +10,12 @@ interface CartContextType {
   updateQuantity: (itemId: string, quantity: number) => Promise<void>;
   clearCart: (poolId?: string) => Promise<void>;
   refreshCart: (poolId: string) => Promise<void>;
+  syncPendingOperations: () => Promise<void>;
+  hasPendingOperations: () => boolean;
   cartTotal: number;
   itemCount: number;
   loading: boolean;
+  syncing: boolean;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -39,15 +42,136 @@ const storePoolId = (poolId: string | null) => {
   }
 };
 
+// Pending operation types
+interface PendingOperation {
+  type: 'add' | 'update' | 'remove';
+  poolId: string;
+  restaurantId: string;
+  dishId: string;
+  quantity: number;
+  dish?: Dish;
+  restaurantName?: string;
+  itemId?: string;
+}
+
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [cart, setCart] = useState<Cart>({ poolId: getStoredPoolId(), items: [] });
   const [loading, setLoading] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const { user } = useAuth();
 
   const refreshInFlightRef = useRef<{ poolId: string; promise: Promise<void> } | null>(null);
   const desiredQuantityRef = useRef<Record<string, number>>({});
+  const pendingOperationsRef = useRef<Map<string, PendingOperation>>(new Map());
+  const syncTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const inFlightSyncRef = useRef<Promise<void> | null>(null);
 
   const makeDesiredKey = (poolId: string, restaurantId: string, dishId: string) => `${poolId}:${restaurantId}:${dishId}`;
+
+  // Check if there are pending operations
+  const hasPendingOperations = useCallback(() => {
+    return pendingOperationsRef.current.size > 0;
+  }, []);
+
+  // Sync all pending operations to backend
+  const syncPendingOperations = useCallback(async () => {
+    if (!user) return;
+    
+    // If already syncing, wait for that to complete
+    if (inFlightSyncRef.current) {
+      return inFlightSyncRef.current;
+    }
+
+    const operations = Array.from(pendingOperationsRef.current.values());
+    if (operations.length === 0) return;
+
+    const syncPromise = (async () => {
+      setSyncing(true);
+      const errors: string[] = [];
+
+      try {
+        // Group operations by dish (to combine multiple adds of same item)
+        const consolidatedOps = new Map<string, PendingOperation>();
+        
+        for (const op of operations) {
+          const key = makeDesiredKey(op.poolId, op.restaurantId, op.dishId);
+          const existing = consolidatedOps.get(key);
+          
+          if (!existing || op.type === 'remove') {
+            consolidatedOps.set(key, op);
+          } else if (op.type === 'add' && existing.type === 'add') {
+            // Combine multiple adds
+            existing.quantity += op.quantity;
+          } else if (op.type === 'update') {
+            // Update takes precedence
+            consolidatedOps.set(key, op);
+          }
+        }
+
+        // Execute consolidated operations
+        for (const [key, op] of consolidatedOps) {
+          try {
+            if (op.type === 'add' && op.dish) {
+              await api.addToCart(op.poolId, op.restaurantId, op.dishId, op.quantity);
+            } else if (op.type === 'update' && op.itemId) {
+              if (op.quantity <= 0) {
+                await api.removeCartItem(op.itemId);
+              } else {
+                await api.updateCartItem(op.itemId, op.quantity);
+              }
+            } else if (op.type === 'remove' && op.itemId) {
+              await api.removeCartItem(op.itemId);
+            }
+            
+            // Remove from pending after successful sync
+            pendingOperationsRef.current.delete(key);
+          } catch (error) {
+            console.error(`Failed to sync operation for ${key}:`, error);
+            errors.push(key);
+          }
+        }
+
+        // Refresh cart to get the final state from server
+        if (cart.poolId) {
+          await refreshCart(cart.poolId);
+        }
+
+        if (errors.length > 0) {
+          console.warn('Some operations failed to sync:', errors);
+        }
+      } finally {
+        setSyncing(false);
+        inFlightSyncRef.current = null;
+      }
+    })();
+
+    inFlightSyncRef.current = syncPromise;
+    return syncPromise;
+  }, [user, cart.poolId]);
+
+  // Debounced sync - triggers sync 500ms after last operation
+  const scheduleSyncRef = useRef((immediate = false) => {
+    if (syncTimerRef.current) {
+      clearTimeout(syncTimerRef.current);
+    }
+
+    if (immediate) {
+      void syncPendingOperations();
+    } else {
+      syncTimerRef.current = setTimeout(() => {
+        void syncPendingOperations();
+      }, 500);
+    }
+  });
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (syncTimerRef.current) {
+        clearTimeout(syncTimerRef.current);
+      }
+    };
+  }, []);
 
   // Load cart from API on mount if poolId exists
   useEffect(() => {
@@ -133,13 +257,14 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Check if switching pools
     if (cart.poolId && cart.poolId !== poolId && cart.items.length > 0) {
+      // Sync pending operations before clearing
+      await syncPendingOperations();
       await clearCart(cart.poolId);
     }
 
     const desiredKey = makeDesiredKey(poolId, restaurantId, dish.id);
 
-    // Optimistic local update so UI/badge updates instantly
-    let optimisticTempId: string | null = null;
+    // Optimistic local update - instant UI feedback
     setCart((prev) => {
       const existingIndex = prev.items.findIndex(
         (item) => item.dishId === dish.id && item.restaurantId === restaurantId
@@ -150,21 +275,17 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (idx !== existingIndex) return item;
           return { ...item, quantity: item.quantity + quantity };
         });
-        const newQuantity = nextItems[existingIndex].quantity;
-        desiredQuantityRef.current[desiredKey] = newQuantity;
-
         return { poolId, items: nextItems };
       }
 
-      optimisticTempId = `temp-${Date.now()}-${dish.id}`;
-      desiredQuantityRef.current[desiredKey] = quantity;
-
+      // New item - create with temp ID
+      const tempId = `temp-${Date.now()}-${dish.id}`;
       return {
         poolId,
         items: [
           ...prev.items,
           {
-            id: optimisticTempId,
+            id: tempId,
             restaurantId,
             restaurantName,
             dishId: dish.id,
@@ -177,88 +298,22 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
     storePoolId(poolId);
 
-    try {
-      setLoading(true);
-      const created: any = await api.addToCart(poolId, restaurantId, dish.id, quantity);
+    // Add to pending operations queue
+    const pendingOp: PendingOperation = {
+      type: 'add',
+      poolId,
+      restaurantId,
+      dishId: dish.id,
+      quantity,
+      dish,
+      restaurantName
+    };
+    pendingOperationsRef.current.set(desiredKey, pendingOp);
 
-      // Replace temp id (if any) and sync quantity/price from server response
-      setCart((prev) => {
-        const idx = prev.items.findIndex((item) => item.dishId === dish.id && item.restaurantId === restaurantId);
-        if (idx < 0) return prev;
+    // Schedule debounced sync
+    scheduleSyncRef.current();
 
-        const nextItems = prev.items.map((item, i) => {
-          if (i !== idx) return item;
-          return {
-            ...item,
-            id: typeof created?.id === 'string' ? created.id : item.id,
-            quantity: typeof created?.quantity === 'number' ? created.quantity : item.quantity,
-            price: typeof created?.price === 'number' ? created.price : item.price,
-            specialInstructions: created?.specialInstructions ?? item.specialInstructions,
-          };
-        });
-        return { ...prev, poolId, items: nextItems };
-      });
-
-      // If user changed quantity while the item was still pending, reconcile once.
-      const desired = desiredQuantityRef.current[desiredKey];
-      if (typeof desired === 'number' && typeof created?.id === 'string') {
-        if (desired !== created.quantity) {
-          try {
-            if (desired <= 0) {
-              await api.removeCartItem(created.id);
-              setCart((prev) => ({
-                ...prev,
-                items: prev.items.filter((it) => it.id !== created.id),
-              }));
-            } else {
-              const updated: any = await api.updateCartItem(created.id, desired);
-              setCart((prev) => {
-                const idx = prev.items.findIndex((it) => it.id === created.id);
-                if (idx < 0) return prev;
-                const nextItems = prev.items.map((it, i) => {
-                  if (i !== idx) return it;
-                  return {
-                    ...it,
-                    quantity: typeof updated?.quantity === 'number' ? updated.quantity : desired,
-                    price: typeof updated?.price === 'number' ? updated.price : it.price,
-                    specialInstructions: updated?.specialInstructions ?? it.specialInstructions,
-                  };
-                });
-                return { ...prev, items: nextItems };
-              });
-            }
-          } catch (err) {
-            console.error('Failed to reconcile pending cart quantity', err);
-          }
-        }
-        delete desiredQuantityRef.current[desiredKey];
-      }
-    } catch (error) {
-      console.error('Failed to add to cart', error);
-
-      // Roll back just this change
-      setCart((prev) => {
-        const idx = prev.items.findIndex((item) => item.dishId === dish.id && item.restaurantId === restaurantId);
-        if (idx < 0) return prev;
-
-        const item = prev.items[idx];
-        if (item.id && item.id.startsWith('temp-')) {
-          return { ...prev, items: prev.items.filter((it) => it.id !== item.id) };
-        }
-
-        const nextQty = item.quantity - quantity;
-        if (nextQty <= 0) {
-          return { ...prev, items: prev.items.filter((_, i) => i !== idx) };
-        }
-
-        const nextItems = prev.items.map((it, i) => (i === idx ? { ...it, quantity: nextQty } : it));
-        return { ...prev, items: nextItems };
-      });
-      delete desiredQuantityRef.current[desiredKey];
-      alert('Failed to add item to cart. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+    // No immediate API call - operations are queued and synced via debounce
   };
 
   const removeFromCart = async (itemId: string) => {
@@ -270,23 +325,21 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Optimistic remove
     setCart((prev) => ({ ...prev, items: prev.items.filter((it) => it.id !== itemId) }));
 
-    // If this was a temp item, just remember the intent; addToCart reconciliation will clean up server.
-    if (itemId.startsWith('temp-')) {
-      desiredQuantityRef.current[makeDesiredKey(cart.poolId, existing.restaurantId, existing.dishId)] = 0;
-      return;
-    }
+    const desiredKey = makeDesiredKey(cart.poolId, existing.restaurantId, existing.dishId);
+    
+    // Queue remove operation
+    const pendingOp: PendingOperation = {
+      type: 'remove',
+      poolId: cart.poolId,
+      restaurantId: existing.restaurantId,
+      dishId: existing.dishId,
+      quantity: 0,
+      itemId: itemId.startsWith('temp-') ? undefined : itemId
+    };
+    pendingOperationsRef.current.set(desiredKey, pendingOp);
 
-    try {
-      setLoading(true);
-      await api.removeCartItem(itemId);
-    } catch (error) {
-      console.error('Failed to remove from cart', error);
-      // Rollback
-      setCart((prev) => ({ ...prev, items: [...prev.items, existing] }));
-      alert('Failed to remove item. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+    // Schedule debounced sync
+    scheduleSyncRef.current();
   };
 
   const updateQuantity = async (itemId: string, quantity: number) => {
@@ -307,45 +360,19 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }));
     }
 
-    // If item is still pending (temp id), just record desired quantity; addToCart will reconcile once it gets a real id.
-    if (itemId.startsWith('temp-')) {
-      desiredQuantityRef.current[desiredKey] = quantity;
-      return;
-    }
+    // Queue update operation
+    const pendingOp: PendingOperation = {
+      type: quantity <= 0 ? 'remove' : 'update',
+      poolId: cart.poolId,
+      restaurantId: existing.restaurantId,
+      dishId: existing.dishId,
+      quantity,
+      itemId: itemId.startsWith('temp-') ? undefined : itemId
+    };
+    pendingOperationsRef.current.set(desiredKey, pendingOp);
 
-    try {
-      setLoading(true);
-      if (quantity <= 0) {
-        await api.removeCartItem(itemId);
-        return;
-      }
-
-      const updated: any = await api.updateCartItem(itemId, quantity);
-      setCart((prev) => ({
-        ...prev,
-        items: prev.items.map((it) => {
-          if (it.id !== itemId) return it;
-          return {
-            ...it,
-            quantity: typeof updated?.quantity === 'number' ? updated.quantity : quantity,
-            price: typeof updated?.price === 'number' ? updated.price : it.price,
-            specialInstructions: updated?.specialInstructions ?? it.specialInstructions,
-          };
-        }),
-      }));
-    } catch (error) {
-      console.error('Failed to update quantity', error);
-      // Rollback
-      setCart((prev) => ({
-        ...prev,
-        items: quantity <= 0
-          ? [...prev.items, existing]
-          : prev.items.map((it) => (it.id === itemId ? existing : it)),
-      }));
-      alert('Failed to update quantity. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+    // Schedule debounced sync
+    scheduleSyncRef.current();
   };
 
   const clearCart = async (poolId?: string) => {
@@ -354,11 +381,17 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const targetPoolId = poolId || cart.poolId;
     if (!targetPoolId) return;
 
+    // Sync pending operations before clearing
+    if (hasPendingOperations()) {
+      await syncPendingOperations();
+    }
+
     try {
       setLoading(true);
       await api.clearCart(targetPoolId);
       setCart({ poolId: null, items: [] });
       storePoolId(null);
+      pendingOperationsRef.current.clear();
     } catch (error) {
       console.error('Failed to clear cart', error);
     } finally {
@@ -377,9 +410,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       updateQuantity, 
       clearCart, 
       refreshCart,
+      syncPendingOperations,
+      hasPendingOperations,
       cartTotal, 
       itemCount,
-      loading 
+      loading,
+      syncing
     }}>
       {children}
     </CartContext.Provider>

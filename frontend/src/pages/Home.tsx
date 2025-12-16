@@ -4,7 +4,8 @@ import { MapPin, Loader2, Building2, ArrowRight, Lock } from 'lucide-react';
 import { getCampuses } from '../services/api';
 import type { Campus } from '../types';
 
-const ACTIVE_CAMPUS_CODES = ['C5-1'];
+// Campuses that are operationally active (always show as active even if no pools currently)
+const OPERATIONAL_CAMPUS_CODES = ['C5-1'];
 
 const Home: React.FC = () => {
   const [campuses, setCampuses] = useState<Campus[]>([]);
@@ -33,10 +34,12 @@ const Home: React.FC = () => {
   };
 
   const sortedCampuses = [...campuses].sort((a, b) => {
-    const aIsActive = ACTIVE_CAMPUS_CODES.includes(a.code);
-    const bIsActive = ACTIVE_CAMPUS_CODES.includes(b.code);
-    if (aIsActive === bIsActive) return a.name.localeCompare(b.name);
-    return aIsActive ? -1 : 1;
+    const aIsOperational = OPERATIONAL_CAMPUS_CODES.includes(a.code);
+    const bIsOperational = OPERATIONAL_CAMPUS_CODES.includes(b.code);
+    const aHasPools = aIsOperational || (a.activePoolCount || 0) > 0;
+    const bHasPools = bIsOperational || (b.activePoolCount || 0) > 0;
+    if (aHasPools === bHasPools) return a.name.localeCompare(b.name);
+    return aHasPools ? -1 : 1;
   });
 
   if (loading) {
@@ -77,9 +80,10 @@ const Home: React.FC = () => {
 
       <div className="grid gap-6 md:grid-cols-2">
         {sortedCampuses.map((campus) => {
-          const isActiveCampus = ACTIVE_CAMPUS_CODES.includes(campus.code);
+          const isOperational = OPERATIONAL_CAMPUS_CODES.includes(campus.code);
+          const hasActivePools = isOperational || (campus.activePoolCount || 0) > 0;
 
-          if (isActiveCampus) {
+          if (hasActivePools) {
             return (
               <button
                 key={campus.id}
@@ -102,7 +106,9 @@ const Home: React.FC = () => {
                   </div>
                   <div className="inline-flex items-center px-2.5 py-1 rounded-full bg-lime-50 text-lime-700 text-xs font-medium">
                     <span className="w-1.5 h-1.5 rounded-full bg-lime-500 mr-1.5"></span>
-                    Active Pools
+                    {campus.activePoolCount && campus.activePoolCount > 0 
+                      ? `${campus.activePoolCount} Active Pool${campus.activePoolCount === 1 ? '' : 's'}`
+                      : 'No active pools'}
                   </div>
                 </div>
               </button>
