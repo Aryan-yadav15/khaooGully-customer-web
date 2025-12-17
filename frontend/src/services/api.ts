@@ -107,6 +107,11 @@ export const getOrderDetails = async (id: string): Promise<Order> => {
   return response.data.data || response.data;
 };
 
+export const getOrderGroup = async (orderGroupId: string): Promise<Order[]> => {
+  const response = await api.get(`/orders/group/${orderGroupId}`);
+  return response.data.data || response.data;
+};
+
 export const getCustomerProfile = async (): Promise<CustomerProfileSummary> => {
   const response = await api.get('/profile/');
   return response.data.data || response.data;

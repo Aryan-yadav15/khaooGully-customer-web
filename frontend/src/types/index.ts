@@ -211,6 +211,7 @@ export interface CustomerProfileSummary {
 export interface CustomerOrderHistoryItem {
   customerId: string;
   orderId: string;
+  orderGroupId?: string;
   poolId: string;
   poolName: string;
   restaurantId?: string;

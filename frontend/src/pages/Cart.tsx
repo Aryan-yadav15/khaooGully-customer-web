@@ -12,6 +12,26 @@ const Cart: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pool, setPool] = useState<Pool | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showPoolClosedModal, setShowPoolClosedModal] = useState(false);
+
+  const getErrorDetailText = (err: any): string => {
+    const data = err?.response?.data;
+    if (!data) return '';
+    if (typeof data === 'string') return data;
+    if (typeof data?.detail === 'string') return data.detail;
+    if (typeof data?.message === 'string') return data.message;
+    if (typeof data?.error === 'string') return data.error;
+    if (typeof data?.data?.detail === 'string') return data.data.detail;
+    return '';
+  };
+
+  const isPoolClosedNow = (p: Pool | null) => {
+    const collectionEnd = (p as any)?.collection_end;
+    if (!collectionEnd) return false;
+    const end = new Date(collectionEnd);
+    if (Number.isNaN(end.getTime())) return false;
+    return new Date() > end;
+  };
 
   // Sync pending operations when cart page loads
   useEffect(() => {
@@ -84,6 +104,13 @@ const Cart: React.FC = () => {
     setShowPaymentModal(false);
     setIsSubmitting(true);
     try {
+      // Fast local guard: if the pool has already closed, don't even try placing the order.
+      if (isPoolClosedNow(pool)) {
+        await clearCart(cart.poolId);
+        setShowPoolClosedModal(true);
+        return;
+      }
+
       const orderPayload = {
         poolId: cart.poolId,
         specialInstructions: null,
@@ -94,19 +121,93 @@ const Cart: React.FC = () => {
       await clearCart(cart.poolId);
       const orderId = (order as any).id ?? (order as any).orderId;
       navigate(`/order/${orderId}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Checkout failed', error);
+
+      const statusCode = error?.response?.status;
+      const errorDetail = getErrorDetailText(error);
+      const detailLower = (errorDetail || '').toLowerCase();
+
+      // Robust detection for pool-closed scenario.
+      const poolClosedFromMessage =
+        detailLower.includes('pool') &&
+        (detailLower.includes('has closed') ||
+          detailLower.includes('no longer') ||
+          detailLower.includes('not accepting') ||
+          detailLower.includes('collection') && detailLower.includes('end'));
+
+      // Also treat it as pool-closed if we can verify the pool is closed by time.
+      let poolClosedFromRefetch = false;
+      try {
+        const latestPool = await getPoolDetails(cart.poolId);
+        setPool(latestPool);
+        poolClosedFromRefetch = isPoolClosedNow(latestPool);
+      } catch {
+        // ignore
+      }
+
+      const isPoolClosed = (statusCode === 400 && poolClosedFromMessage) || poolClosedFromRefetch;
+
+      if (isPoolClosed) {
+        await clearCart(cart.poolId);
+        setShowPoolClosedModal(true);
+        return;
+      }
+
       alert('Failed to place order. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const poolClosedModal = showPoolClosedModal ? (
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-in fade-in duration-200">
+      <div className="bg-white rounded-xl md:rounded-3xl max-w-md w-full p-8 shadow-2xl animate-in zoom-in-95 duration-200">
+        <div className="text-center mb-6">
+          <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Clock className="w-10 h-10 text-red-600" />
+          </div>
+          <h3 className="text-2xl font-bold text-gray-900 mb-2">Pool Has Closed</h3>
+          <p className="text-gray-600 leading-relaxed">
+            Unfortunately, this food pool is no longer accepting orders. The ordering window has ended.
+          </p>
+        </div>
+
+        <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4 mb-6">
+          <p className="text-sm text-orange-800 font-medium leading-relaxed">
+            💡 <span className="font-bold">What&apos;s next?</span>
+            <br />
+            Check for the next available pool or browse other restaurants on your campus.
+          </p>
+        </div>
+
+        <div className="flex gap-3">
+          <button
+            onClick={() => {
+              setShowPoolClosedModal(false);
+              navigate('/');
+            }}
+            className="flex-1 py-3.5 px-4 bg-primary text-white rounded-xl font-bold hover:bg-primary-dark transition-all shadow-lg shadow-primary/20"
+          >
+            Find Pools
+          </button>
+          <button
+            onClick={() => setShowPoolClosedModal(false)}
+            className="flex-1 py-3.5 px-4 border border-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition-colors"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  ) : null;
+
   // Show skeleton when syncing pending operations
   if (syncing || (loading && cart.items.length === 0)) {
     return (
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-3xl shadow-soft p-8 animate-pulse">
+      <>
+        <div className="max-w-6xl mx-auto px-4 py-8">
+          <div className="bg-white rounded-3xl shadow-soft p-8 animate-pulse">
           {/* Header skeleton */}
           <div className="h-10 bg-gray-100 rounded-xl w-1/3 mb-8"></div>
           
@@ -126,26 +227,31 @@ const Cart: React.FC = () => {
           <div className="mt-8 pt-6 border-t border-gray-50">
             <div className="h-8 bg-gray-100 rounded-xl w-1/4 ml-auto"></div>
           </div>
+          </div>
         </div>
-      </div>
+        {poolClosedModal}
+      </>
     );
   }
 
   if (cart.items.length === 0) {
     return (
-      <div className="text-center py-20">
-        <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
-          <div className="w-12 h-12 border-2 border-gray-300 rounded-xl border-dashed"></div>
+      <>
+        <div className="text-center py-20">
+          <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <div className="w-12 h-12 border-2 border-gray-300 rounded-xl border-dashed"></div>
+          </div>
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">Your cart is empty</h2>
+          <p className="text-gray-500 mb-8 text-lg">Add some delicious food from the pools!</p>
+          <button
+            onClick={() => navigate('/')}
+            className="px-8 py-4 bg-primary text-white rounded-2xl font-bold hover:bg-primary-dark transition-all shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-1"
+          >
+            Browse Pools
+          </button>
         </div>
-        <h2 className="text-3xl font-bold text-gray-900 mb-4">Your cart is empty</h2>
-        <p className="text-gray-500 mb-8 text-lg">Add some delicious food from the pools!</p>
-        <button
-          onClick={() => navigate('/')}
-          className="px-8 py-4 bg-primary text-white rounded-2xl font-bold hover:bg-primary-dark transition-all shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-1"
-        >
-          Browse Pools
-        </button>
-      </div>
+        {poolClosedModal}
+      </>
     );
   }
 
@@ -372,6 +478,8 @@ const Cart: React.FC = () => {
           </div>
         </div>
       )}
+
+      {poolClosedModal}
     </div>
   );
 };

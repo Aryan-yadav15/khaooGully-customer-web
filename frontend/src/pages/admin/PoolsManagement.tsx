@@ -167,6 +167,59 @@ const PoolsManagement: React.FC = () => {
     }));
   };
 
+  const createQuickTestPool = async () => {
+    try {
+      // Find Kings Palace - 19 campus
+      const kingsPalaceCampus = campuses.find(c => c.code === 'C5-1');
+      if (!kingsPalaceCampus) {
+        alert('Kings Palace - 19 campus not found');
+        return;
+      }
+
+      // Find the 3 test restaurants
+      const testRestaurantNames = ['Test Restaurant 1', 'Test restaurant 2', 'Test restraunt 3'];
+      const testRestaurants = restaurants.filter(r => testRestaurantNames.includes(r.name));
+      
+      if (testRestaurants.length !== 3) {
+        alert(`Only found ${testRestaurants.length} test restaurants. Expected 3.`);
+        return;
+      }
+
+      // Calculate times
+      const now = new Date();
+      const endTime = new Date(now.getTime() + 10 * 60 * 60 * 1000); // +10 hours
+      const deliveryTime = new Date(endTime.getTime() + 30 * 60 * 1000); // +30 minutes after end
+      
+      const startWindow = new Date(deliveryTime.getTime() - 10 * 60000);
+      const endWindow = new Date(deliveryTime.getTime() + 10 * 60000);
+      
+      const formatTime = (date: Date) => {
+        return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+      };
+      
+      const deliveryWindow = `${formatTime(startWindow)} - ${formatTime(endWindow)}`;
+
+      const payload = {
+        name: 'Auto test pool',
+        campus_id: kingsPalaceCampus.id,
+        description: 'Quick test pool for development',
+        delivery_fee_per_order: 0,
+        collection_start: now.toISOString(),
+        collection_end: endTime.toISOString(),
+        expected_delivery_time: deliveryTime.toISOString(),
+        delivery_window: deliveryWindow,
+        participating_restaurants: testRestaurants.map(r => r.id),
+      };
+
+      await admin.createPool(payload);
+      fetchData();
+      alert('Quick test pool created successfully!');
+    } catch (error) {
+      console.error('Failed to create quick test pool:', error);
+      alert('Failed to create quick test pool. Check console for details.');
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 pb-24">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
@@ -174,16 +227,24 @@ const PoolsManagement: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-900">Pools Management</h1>
           <p className="text-gray-500 mt-1">Manage active food pools and deliveries</p>
         </div>
-        <button
-          onClick={() => {
-            setEditingPool(null);
-            resetForm();
-            setIsModalOpen(true);
-          }}
-          className="bg-gradient-to-r from-lime-500 to-green-600 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:shadow-lg hover:shadow-lime-500/30 transition-all active:scale-95"
-        >
-          <Plus className="w-5 h-5" /> Create Pool
-        </button>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <button
+            onClick={createQuickTestPool}
+            className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:shadow-lg hover:shadow-blue-500/30 transition-all active:scale-95"
+          >
+            <Clock className="w-5 h-5" /> Quick Test Pool
+          </button>
+          <button
+            onClick={() => {
+              setEditingPool(null);
+              resetForm();
+              setIsModalOpen(true);
+            }}
+            className="bg-gradient-to-r from-lime-500 to-green-600 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:shadow-lg hover:shadow-lime-500/30 transition-all active:scale-95"
+          >
+            <Plus className="w-5 h-5" /> Create Pool
+          </button>
+        </div>
       </div>
 
       <div className="bg-white rounded-[2rem] shadow-soft border border-gray-100 overflow-hidden">

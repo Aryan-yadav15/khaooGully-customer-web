@@ -6,6 +6,19 @@ import { getCustomerOrders, getCustomerProfile, updateCustomerProfile } from '..
 import { formatLocalTime } from '../utils/datetime';
 import { useAuth } from '../context/AuthContext';
 
+// Group orders by orderGroupId for display
+interface OrderGroup {
+  orderGroupId: string | null;
+  orders: CustomerOrderHistoryItem[];
+  poolName: string;
+  orderedAt: string;
+  totalAmount: number;
+  itemCount: number;
+  status: string;
+  paymentStatus: string;
+  restaurantNames: string[];
+}
+
 export default function Profile() {
   const { needsPhone, markPhoneCompleted } = useAuth();
   const [profile, setProfile] = useState<CustomerProfileSummary | null>(null);
@@ -71,6 +84,62 @@ export default function Profile() {
   if (!profile) {
     return <div className="text-center text-gray-500 mt-12">Profile not found.</div>;
   }
+
+  // Group orders by orderGroupId
+  const groupedOrders: OrderGroup[] = [];
+  const processedGroupIds = new Set<string>();
+  
+  orders.forEach((order) => {
+    const groupId = order.orderGroupId || order.orderId; // Use orderId as fallback for old orders
+    
+    if (processedGroupIds.has(groupId)) {
+      return; // Already processed this group
+    }
+    
+    // Find all orders with same groupId
+    const groupOrders = order.orderGroupId 
+      ? orders.filter(o => o.orderGroupId === order.orderGroupId)
+      : [order]; // Old orders without groupId are displayed individually
+    
+    const restaurantNames = groupOrders
+      .map(o => o.restaurantName)
+      .filter((name): name is string => !!name);
+    
+    // Check if all orders have same status
+    const statuses = [...new Set(groupOrders.map(o => o.status))];
+    const hasRejectedOrders = groupOrders.some(o => 
+      o.status === 'rejected' || o.status === 'auto_rejected'
+    );
+    const allRejected = groupOrders.every(o => 
+      o.status === 'rejected' || o.status === 'auto_rejected' || o.status === 'cancelled'
+    );
+    
+    // Calculate total excluding rejected orders
+    const activeOrders = groupOrders.filter(o => 
+      o.status !== 'rejected' && o.status !== 'auto_rejected' && o.status !== 'cancelled'
+    );
+    const totalAmount = activeOrders.length > 0 
+      ? activeOrders.reduce((sum, o) => sum + o.total, 0)
+      : groupOrders.reduce((sum, o) => sum + o.total, 0); // Show full amount if all rejected
+    
+    const displayStatus = statuses.length > 1 && hasRejectedOrders
+      ? (allRejected ? 'rejected' : 'mixed')
+      : order.status;
+    
+    groupedOrders.push({
+      orderGroupId: order.orderGroupId || null,
+      orders: groupOrders,
+      poolName: order.poolName,
+      orderedAt: order.orderedAt,
+      totalAmount: totalAmount,
+      itemCount: activeOrders.reduce((sum, o) => sum + o.itemCount, 0) || groupOrders.reduce((sum, o) => sum + o.itemCount, 0),
+      status: displayStatus,
+      paymentStatus: order.paymentStatus,
+      restaurantNames: restaurantNames,
+    });
+    
+    processedGroupIds.add(groupId);
+  });
 
   const hasValidPhone = (value: string) => value.replace(/\D/g, '').length >= 10;
 
@@ -207,14 +276,14 @@ export default function Profile() {
             <ShoppingBag className="w-5 h-5 text-primary" />
             Previous Orders
           </h2>
-          {orders.length > 0 && (
+          {groupedOrders.length > 0 && (
             <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-bold">
-              {orders.length} Orders
+              {groupedOrders.length} {groupedOrders.length === 1 ? 'Order' : 'Orders'}
             </span>
           )}
         </div>
 
-        {orders.length === 0 ? (
+        {groupedOrders.length === 0 ? (
           <div className="p-12 text-center">
             <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
               <ShoppingBag className="w-8 h-8 text-gray-300" />
@@ -230,49 +299,60 @@ export default function Profile() {
           </div>
         ) : (
           <div className="divide-y divide-gray-50">
-            {orders.map((o) => (
-              <div key={o.orderId} className="p-6 hover:bg-gray-50/50 transition-colors group">
+            {groupedOrders.map((group) => (
+              <div key={group.orders[0].orderId} className="p-6 hover:bg-gray-50/50 transition-colors group">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-bold text-gray-900 truncate text-lg">
-                        {o.poolName}
+                        {group.poolName}
                       </h3>
-                      {o.restaurantName && (
+                      {group.restaurantNames.length > 0 && (
                         <>
                           <span className="text-gray-300">•</span>
-                          <span className="text-gray-600 truncate">{o.restaurantName}</span>
+                          <span className="text-gray-600 truncate">
+                            {group.restaurantNames.length === 1 
+                              ? group.restaurantNames[0] 
+                              : `${group.restaurantNames.length} restaurants`}
+                          </span>
                         </>
                       )}
                     </div>
                     <div className="flex items-center gap-4 text-sm text-gray-500">
                       <span className="flex items-center gap-1.5">
                         <Clock className="w-3.5 h-3.5" />
-                        {formatLocalTime(o.orderedAt)}
+                        {formatLocalTime(group.orderedAt)}
                       </span>
                       <span className="w-1 h-1 rounded-full bg-gray-300"></span>
-                      <span>{o.itemCount} items</span>
+                      <span>{group.itemCount} items</span>
+                      {group.orders.length > 1 && (
+                        <>
+                          <span className="w-1 h-1 rounded-full bg-gray-300"></span>
+                          <span>{group.orders.length} orders</span>
+                        </>
+                      )}
                       <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wide ${
-                        o.status === 'delivered' ? 'bg-green-100 text-green-700' :
-                        o.status === 'cancelled' ? 'bg-red-100 text-red-700' :
+                        group.status === 'delivered' ? 'bg-green-100 text-green-700' :
+                        group.status === 'cancelled' || group.status === 'rejected' || group.status === 'auto_rejected' ? 'bg-red-100 text-red-700' :
+                        group.status === 'mixed' ? 'bg-orange-100 text-orange-700' :
                         'bg-blue-100 text-blue-700'
                       }`}>
-                        {o.status}
+                        {group.status === 'mixed' ? 'Partial' : group.status}
                       </span>
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between sm:justify-end gap-6">
                     <div className="text-right">
-                      <p className="font-bold text-lg text-gray-900">₹{(o.total / 100).toFixed(0)}</p>
+                      <p className="font-bold text-lg text-gray-900">₹{(group.totalAmount / 100).toFixed(0)}</p>
                       <p className={`text-xs font-medium uppercase tracking-wide ${
-                        o.paymentStatus === 'paid' ? 'text-green-600' : 'text-orange-600'
+                        group.paymentStatus === 'paid' ? 'text-green-600' : 'text-orange-600'
                       }`}>
-                        {o.paymentStatus}
+                        {group.paymentStatus}
                       </p>
                     </div>
                     <Link
-                      to={`/order/${o.orderId}`}
+                      to={`/order/${group.orders[0].orderId}`}
                       className="px-5 py-2.5 rounded-lg md:rounded-xl bg-primary text-white text-sm font-bold hover:bg-primary-dark shadow-lg shadow-primary/20 hover:shadow-primary/30 hover:-translate-y-0.5 transition-all flex items-center gap-2"
                     >
                       View

@@ -11,7 +11,6 @@ const RestaurantDetails: React.FC = () => {
   const [menu, setMenu] = useState<Dish[]>([]);
   const [menuSearch, setMenuSearch] = useState('');
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'menu' | 'reviews'>('menu');
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
   const { addToCart, cart, updateQuantity, removeFromCart, refreshCart, syncPendingOperations, hasPendingOperations, itemCount } = useCart();
@@ -193,34 +192,9 @@ const RestaurantDetails: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex gap-8 border-b border-gray-100 mt-8">
-              <button 
-                onClick={() => setActiveTab('menu')}
-                className={`pb-4 font-bold text-sm transition-all relative ${
-                  activeTab === 'menu' ? 'text-primary' : 'text-gray-400 hover:text-gray-600'
-                }`}
-              >
-                Menu
-                {activeTab === 'menu' && (
-                  <span className="absolute bottom-0 left-0 w-full h-1 bg-primary rounded-t-full"></span>
-                )}
-              </button>
-              <button 
-                onClick={() => setActiveTab('reviews')}
-                className={`pb-4 font-bold text-sm transition-all relative ${
-                  activeTab === 'reviews' ? 'text-primary' : 'text-gray-400 hover:text-gray-600'
-                }`}
-              >
-                Reviews (0)
-                {activeTab === 'reviews' && (
-                  <span className="absolute bottom-0 left-0 w-full h-1 bg-primary rounded-t-full"></span>
-                )}
-              </button>
-            </div>
           </div>
 
-          {activeTab === 'menu' && (
-            <div>
+          <div>
               <div className="mb-8">
                 <div className="relative group">
                   <Search className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2 group-focus-within:text-primary transition-colors" />
@@ -368,8 +342,7 @@ const RestaurantDetails: React.FC = () => {
                 </div>
               )}
             </div>
-          )}
-        </div>
+          </div>
 
         {/* Right Column: Cart Summary (Desktop) */}
         <div className="hidden lg:block lg:col-span-4">

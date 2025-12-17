@@ -1,12 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { CheckCircle, Loader2, MapPin, Store, Clock, Receipt, Phone, User, ShieldCheck, ChevronLeft, AlertCircle } from 'lucide-react';
-import { getOrderDetails } from '../services/api';
+import { getOrderDetails, getOrderGroup } from '../services/api';
 import type { Order } from '../types';
 
 const OrderTracking: React.FC = () => {
   const { orderId } = useParams<{ orderId: string }>();
   const [order, setOrder] = useState<Order | null>(null);
+  const [siblingOrders, setSiblingOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
   const formatMoney = (paise: number) => `₹${(Math.max(0, paise) / 100).toFixed(0)}`;
@@ -37,6 +38,18 @@ const OrderTracking: React.FC = () => {
       try {
         const data = await getOrderDetails(orderId);
         setOrder(data);
+        
+        // If this order has an orderGroupId, fetch all orders in the group
+        if ((data as any).orderGroupId) {
+          try {
+            const groupOrders = await getOrderGroup((data as any).orderGroupId);
+            // Exclude the current order from siblings
+            const siblings = groupOrders.filter(o => o.orderId !== orderId);
+            setSiblingOrders(siblings);
+          } catch (err) {
+            console.error('Failed to fetch order group:', err);
+          }
+        }
       } catch (err) {
         console.error(err);
       } finally {
@@ -74,13 +87,13 @@ const OrderTracking: React.FC = () => {
     { status: 'delivered', label: 'Delivered', description: 'Enjoy your meal!' },
   ];
 
-  // Map order status to step index (handle rejected/cancelled separately)
+  // Map order status to step index (handle rejected/cancelled/auto_rejected separately)
   const currentStatus = order.orderStatus?.toLowerCase() || '';
   let currentStepIndex = steps.findIndex(s => s.status === currentStatus);
   
-  // If order is rejected or cancelled, show it stuck at the last known step
+  // If order is rejected, auto_rejected, or cancelled, show it stuck at the last known step
   if (currentStepIndex === -1) {
-    if (currentStatus === 'rejected' || currentStatus === 'cancelled') {
+    if (currentStatus === 'rejected' || currentStatus === 'auto_rejected' || currentStatus === 'cancelled') {
       // Find the highest step that could have been reached
       // Rejected orders likely never got past 'pending' or 'accepted'
       currentStepIndex = 1; // Show as confirmed but not progressing
@@ -166,7 +179,7 @@ const OrderTracking: React.FC = () => {
             
             {order.otp && (
               <div className="mt-4 p-5 bg-white rounded-xl md:rounded-2xl border-2 border-accent/30 shadow-sm relative overflow-hidden">
-                <div className="absolute right-0 top-0 bottom-0 w-2 bg-accent"></div>
+                <div className="absolute right-0 top-0 bottom-0 w-2 "></div>
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div className="flex-1 text-center sm:text-left">
                     <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1 flex items-center justify-center sm:justify-start gap-1">
@@ -175,7 +188,7 @@ const OrderTracking: React.FC = () => {
                     <p className="text-sm text-gray-600 font-medium">Share this OTP with your driver for verification</p>
                   </div>
                   <div className="flex-shrink-0">
-                    <div className="bg-accent text-black px-6 py-2 rounded-xl shadow-sm transform rotate-1 hover:rotate-0 transition-transform">
+                    <div className="bg-accent text-black px-6 py-2 rounded-xl shadow-sm transition-transform">
                       <p className="text-3xl font-black tracking-[0.2em]">{order.otp}</p>
                     </div>
                   </div>
@@ -193,8 +206,8 @@ const OrderTracking: React.FC = () => {
           Order Status
         </h2>
         
-        {/* Show alert for rejected/cancelled orders */}
-        {(currentStatus === 'rejected' || currentStatus === 'cancelled') && (
+        {/* Show alert for rejected/auto_rejected/cancelled orders */}
+        {(currentStatus === 'rejected' || currentStatus === 'auto_rejected' || currentStatus === 'cancelled') && (
           <div className={`mb-8 p-4 rounded-2xl flex items-start gap-3 ${
             currentStatus === 'cancelled' 
               ? 'bg-gray-50 border border-gray-200 text-gray-700' 
@@ -203,10 +216,17 @@ const OrderTracking: React.FC = () => {
             <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
             <div>
               <p className="font-bold text-lg">
-                {currentStatus === 'cancelled' ? 'Order Cancelled' : 'Order Rejected'}
+                {currentStatus === 'cancelled' 
+                  ? 'Order Cancelled' 
+                  : currentStatus === 'auto_rejected'
+                  ? 'Order Auto-Rejected'
+                  : 'Order Rejected'}
               </p>
               {order.cancellationReason && (
                 <p className="text-sm mt-1 opacity-90">{order.cancellationReason}</p>
+              )}
+              {currentStatus === 'auto_rejected' && !order.cancellationReason && (
+                <p className="text-sm mt-1 opacity-90">Restaurant did not respond in time</p>
               )}
             </div>
           </div>
@@ -245,10 +265,39 @@ const OrderTracking: React.FC = () => {
 
       {/* Order Summary Card */}
       <div className="bg-white rounded-xl md:rounded-3xl shadow-soft border border-gray-100 p-8">
+        {(() => {
+          const allOrdersInGroup = [order, ...siblingOrders];
+          const rejectedCount = allOrdersInGroup.filter(o => {
+            const status = o.orderStatus?.toLowerCase() || '';
+            return status === 'rejected' || status === 'auto_rejected' || status === 'cancelled';
+          }).length;
+          const acceptedCount = allOrdersInGroup.length - rejectedCount;
+          
+          return rejectedCount > 0 && acceptedCount > 0 ? (
+            <div className="mb-6 p-4 bg-orange-50 border-2 border-orange-200 rounded-2xl">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-bold text-orange-900 text-lg">Mixed Order Status</p>
+                  <p className="text-orange-700 text-sm mt-1">
+                    {acceptedCount} of {allOrdersInGroup.length} restaurant{allOrdersInGroup.length > 1 ? 's' : ''} accepted your order. 
+                    {rejectedCount} rejected. Amount reflects accepted orders only.
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : null;
+        })()}
+        
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
             <Receipt className="w-5 h-5 text-primary" />
             Order Summary
+            {siblingOrders.length > 0 && (
+              <span className="ml-2 px-2 py-0.5 bg-primary-light text-primary text-xs font-bold rounded-full">
+                {siblingOrders.length + 1} restaurants
+              </span>
+            )}
           </h2>
           <div className="text-right">
             <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">{paymentLabel}</p>
@@ -281,14 +330,45 @@ const OrderTracking: React.FC = () => {
             <div className="flex items-start gap-3">
               <Store className="w-4 h-4 text-gray-400 mt-0.5" />
               <div>
-                <span className="font-bold text-gray-900 block">Restaurant</span>
-                <span className="text-gray-600">{order.restaurantName}</span>
+                <span className="font-bold text-gray-900 block">Restaurant{siblingOrders.length > 0 ? 's' : ''}</span>
+                <span className="text-gray-600">
+                  {order.restaurantName}
+                  {siblingOrders.map(s => s.restaurantName).filter(Boolean).map((name, i) => (
+                    <span key={i}> • {name}</span>
+                  ))}
+                </span>
               </div>
             </div>
           )}
         </div>
 
-        <div className="divide-y divide-gray-50">
+        {/* Main Order Items */}
+        {order.restaurantName && (
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+              <Store className="w-4 h-4 text-primary" />
+              {order.restaurantName}
+            </h3>
+            <div className="flex items-center gap-2">
+              {order.otp && (currentStatus !== 'rejected' && currentStatus !== 'auto_rejected' && currentStatus !== 'cancelled') && <span className="px-2 py-0.5 bg-accent/20 text-accent-dark text-xs rounded font-bold">OTP: {order.otp}</span>}
+              <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase ${
+                currentStatus === 'delivered' ? 'bg-green-100 text-green-700' :
+                currentStatus === 'rejected' || currentStatus === 'auto_rejected' || currentStatus === 'cancelled' ? 'bg-red-100 text-red-700' :
+                'bg-blue-100 text-blue-700'
+              }`}>
+                {currentStatus}
+              </span>
+            </div>
+          </div>
+        )}
+        
+        {(currentStatus === 'rejected' || currentStatus === 'auto_rejected' || currentStatus === 'cancelled') && (
+          <div className="mb-3 p-2 bg-red-50 border border-red-100 rounded-lg text-xs text-red-700">
+            <strong>{currentStatus === 'auto_rejected' ? 'Auto-Rejected' : currentStatus === 'cancelled' ? 'Cancelled' : 'Rejected'}:</strong> {order.cancellationReason || (currentStatus === 'auto_rejected' ? 'Restaurant did not respond in time' : 'Restaurant declined your order')}
+          </div>
+        )}
+        
+        <div className={`divide-y divide-gray-50 ${(currentStatus === 'rejected' || currentStatus === 'auto_rejected' || currentStatus === 'cancelled') ? 'line-through opacity-60' : ''}`}>
           {items.length === 0 ? (
             <p className="text-sm text-gray-500 py-4 text-center italic">No items found for this order.</p>
           ) : (
@@ -329,38 +409,164 @@ const OrderTracking: React.FC = () => {
           )}
         </div>
 
-        <div className="mt-6 border-t border-dashed border-gray-200 pt-6 space-y-2">
-          <div className="flex items-center justify-between text-sm text-gray-600">
-            <span>Subtotal</span>
-            <span className="font-medium text-gray-900">{formatMoney(order.subtotal)}</span>
-          </div>
-          <div className="flex items-center justify-between text-sm text-gray-600">
-            <span>Delivery fee</span>
-            <span className="font-medium text-gray-900">{formatMoney(order.deliveryFee)}</span>
-          </div>
-          {(order.platformFee || 0) > 0 && (
-            <div className="flex items-center justify-between text-sm text-gray-600">
-              <span>Platform fee</span>
-              <span className="font-medium text-gray-900">{formatMoney(order.platformFee)}</span>
-            </div>
-          )}
-          {(order.taxes || 0) > 0 && (
-            <div className="flex items-center justify-between text-sm text-gray-600">
-              <span>Taxes</span>
-              <span className="font-medium text-gray-900">{formatMoney(order.taxes)}</span>
-            </div>
-          )}
-          {(order.discount || 0) > 0 && (
-            <div className="flex items-center justify-between text-sm text-green-600">
-              <span>Discount</span>
-              <span className="font-bold">- {formatMoney(order.discount)}</span>
-            </div>
-          )}
+        {/* Sibling Orders from other restaurants */}
+        {siblingOrders.map((siblingOrder, sibIdx) => {
+          // Parse items directly without useMemo (already in render)
+          const raw: any = (siblingOrder as any)?.items;
+          let siblingItems: any[] = [];
           
-          <div className="flex items-center justify-between pt-4 mt-4 border-t border-gray-100">
-            <span className="text-lg font-bold text-gray-900">Total</span>
-            <span className="text-2xl font-black text-primary">{formatMoney(order.total)}</span>
-          </div>
+          if (Array.isArray(raw)) {
+            siblingItems = raw;
+          } else if (typeof raw === 'string') {
+            try {
+              const parsed = JSON.parse(raw);
+              siblingItems = Array.isArray(parsed) ? parsed : [];
+            } catch {
+              siblingItems = [];
+            }
+          }
+
+          const siblingStatus = siblingOrder.orderStatus?.toLowerCase() || '';
+          const isRejected = siblingStatus === 'rejected' || siblingStatus === 'auto_rejected' || siblingStatus === 'cancelled';
+
+          return (
+            <div key={siblingOrder.orderId} className={`mt-6 pt-6 border-t border-gray-200 ${isRejected ? 'opacity-50 bg-gray-50' : ''}`}>
+              {siblingOrder.restaurantName && (
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                    <Store className="w-4 h-4 text-primary" />
+                    {siblingOrder.restaurantName}
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    {siblingOrder.otp && !isRejected && <span className="px-2 py-0.5 bg-accent/20 text-accent-dark text-xs rounded font-bold">OTP: {siblingOrder.otp}</span>}
+                    <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase ${
+                      siblingStatus === 'delivered' ? 'bg-green-100 text-green-700' :
+                      isRejected ? 'bg-red-100 text-red-700' :
+                      'bg-blue-100 text-blue-700'
+                    }`}>
+                      {siblingStatus}
+                    </span>
+                  </div>
+                </div>
+              )}
+              {isRejected && (
+                <div className="mb-3 p-2 bg-red-50 border border-red-100 rounded-lg text-xs text-red-700">
+                  <strong>{siblingStatus === 'auto_rejected' ? 'Auto-Rejected' : 'Rejected'}:</strong> {siblingOrder.cancellationReason || (siblingStatus === 'auto_rejected' ? 'Restaurant did not respond in time' : 'Restaurant declined your order')}
+                </div>
+              )}
+              <div className={`divide-y divide-gray-50 ${isRejected ? 'line-through opacity-60' : ''}`}>
+                {siblingItems.map((it: any, idx: number) => {
+                  const name = it.dish_name ?? it.dishName ?? it.name ?? it.dishName ?? 'Item';
+                  const quantity = typeof it.quantity === 'number' ? it.quantity : 1;
+                  const unitPrice = typeof it.unit_price === 'number'
+                    ? it.unit_price
+                    : (typeof it.unitPrice === 'number' ? it.unitPrice : (typeof it.price === 'number' ? it.price : 0));
+                  const lineTotal = typeof it.subtotal === 'number' ? it.subtotal : unitPrice * quantity;
+                  const isVeg = typeof it.veg === 'boolean' ? it.veg : true;
+
+                  return (
+                    <div key={`sibling-${sibIdx}-${idx}-${String(name)}`} className="py-4 flex items-start justify-between gap-4 group hover:bg-gray-50/50 transition-colors rounded-lg px-2 -mx-2">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          {isVeg ? (
+                            <span className="w-4 h-4 border border-green-600 flex items-center justify-center p-0.5 rounded-sm flex-shrink-0" title="Veg">
+                              <span className="w-2 h-2 bg-green-600 rounded-full"></span>
+                            </span>
+                          ) : (
+                            <span className="w-4 h-4 border border-red-600 flex items-center justify-center p-0.5 rounded-sm flex-shrink-0" title="Non-Veg">
+                              <span className="w-2 h-2 bg-red-600 rounded-full"></span>
+                            </span>
+                          )}
+                          <p className="font-bold text-gray-900 truncate">{name}</p>
+                        </div>
+                        <p className="text-sm text-gray-500 mt-1 font-medium pl-6">
+                          {quantity} × {formatMoney(unitPrice)}
+                          {it.special_instructions ? <> • <span className="italic text-gray-400">{String(it.special_instructions)}</span></> : null}
+                        </p>
+                      </div>
+                      <p className="font-bold text-gray-900 flex-shrink-0">{formatMoney(lineTotal)}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+
+        <div className="mt-6 border-t border-dashed border-gray-200 pt-6 space-y-2">
+          {(() => {
+            const allOrders = [order, ...siblingOrders];
+            // Exclude rejected orders from total calculation
+            const activeOrders = allOrders.filter(o => {
+              const status = o.orderStatus?.toLowerCase() || '';
+              return status !== 'rejected' && status !== 'auto_rejected' && status !== 'cancelled';
+            });
+            
+            const hasRejectedOrders = activeOrders.length < allOrders.length;
+            const ordersToCalculate = activeOrders.length > 0 ? activeOrders : allOrders; // Show full if all rejected
+            
+            const totalSubtotal = ordersToCalculate.reduce((sum, o) => sum + (o.subtotal || 0), 0);
+            const totalDeliveryFee = ordersToCalculate.reduce((sum, o) => sum + (o.deliveryFee || 0), 0);
+            const totalPlatformFee = ordersToCalculate.reduce((sum, o) => sum + (o.platformFee || 0), 0);
+            const totalTaxes = ordersToCalculate.reduce((sum, o) => sum + (o.taxes || 0), 0);
+            const totalDiscount = ordersToCalculate.reduce((sum, o) => sum + (o.discount || 0), 0);
+            const grandTotal = ordersToCalculate.reduce((sum, o) => sum + (o.total || 0), 0);
+
+            return (
+              <>
+                {hasRejectedOrders && activeOrders.length > 0 && (
+                  <div className="mb-4 p-3 bg-orange-50 border border-orange-200 rounded-lg text-sm">
+                    <p className="text-orange-800 font-bold">⚠️ Partial Order - Amount Adjusted</p>
+                    <p className="text-orange-700 text-xs mt-1">
+                      {allOrders.length - activeOrders.length} restaurant(s) rejected. Total reflects accepted items only.
+                    </p>
+                  </div>
+                )}
+                {hasRejectedOrders && activeOrders.length === 0 && (
+                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm">
+                    <p className="text-red-800 font-bold">❌ All Orders Rejected</p>
+                    <p className="text-red-700 text-xs mt-1">
+                      No charges will be applied. Amounts shown are for reference only.
+                    </p>
+                  </div>
+                )}
+                <div className="flex items-center justify-between text-sm text-gray-600">
+                  <span>Subtotal{hasRejectedOrders ? ' (Accepted only)' : ''}</span>
+                  <span className="font-medium text-gray-900">{formatMoney(totalSubtotal)}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm text-gray-600">
+                  <span>Delivery fee{hasRejectedOrders ? ' (Adjusted)' : ''}</span>
+                  <span className="font-medium text-gray-900">{formatMoney(totalDeliveryFee)}</span>
+                </div>
+                {totalPlatformFee > 0 && (
+                  <div className="flex items-center justify-between text-sm text-gray-600">
+                    <span>Platform fee</span>
+                    <span className="font-medium text-gray-900">{formatMoney(totalPlatformFee)}</span>
+                  </div>
+                )}
+                {totalTaxes > 0 && (
+                  <div className="flex items-center justify-between text-sm text-gray-600">
+                    <span>Taxes</span>
+                    <span className="font-medium text-gray-900">{formatMoney(totalTaxes)}</span>
+                  </div>
+                )}
+                {totalDiscount > 0 && (
+                  <div className="flex items-center justify-between text-sm text-green-600">
+                    <span>Discount</span>
+                    <span className="font-bold">- {formatMoney(totalDiscount)}</span>
+                  </div>
+                )}
+                
+                <div className="flex items-center justify-between pt-4 mt-4 border-t border-gray-100">
+                  <span className="text-lg font-bold text-gray-900">{hasRejectedOrders && activeOrders.length === 0 ? 'Total (No Charge)' : 'Total to Pay'}</span>
+                  <span className={`text-2xl font-black ${hasRejectedOrders && activeOrders.length === 0 ? 'text-gray-400 line-through' : 'text-primary'}`}>{formatMoney(grandTotal)}</span>
+                </div>
+                {hasRejectedOrders && activeOrders.length === 0 && (
+                  <p className="text-xs text-center text-green-600 font-bold mt-2">₹0 - Refund will be processed</p>
+                )}
+              </>
+            );
+          })()}
         </div>
       </div>
     </div>

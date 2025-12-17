@@ -160,6 +160,10 @@ async def CreateOrder(
         })
     
     # Create orders (one per restaurant)
+    # Generate a single order_group_id for all orders from this checkout
+    import uuid
+    OrderGroupId = str(uuid.uuid4())
+    
     CreatedOrders = []
     
     for RestaurantId, Items in RestaurantGroups.items():
@@ -177,6 +181,7 @@ async def CreateOrder(
             "pool_id": OrderData.poolId,
             "customer_id": UserId,
             "restaurant_id": RestaurantId,
+            "order_group_id": OrderGroupId,
             "items": Items,
             "subtotal": RestaurantSubtotal,
             "delivery_fee": ProportionalDeliveryFee,
@@ -201,6 +206,34 @@ async def CreateOrder(
     Order = CreatedOrders[0]
     
     return OrderResponse(**Order)
+
+
+@Router.get("/group/{order_group_id}", response_model=List[OrderDetailResponse])
+async def GetOrderGroup(
+    order_group_id: str,
+    UserId: str = Depends(GetCurrentUserId),
+    Db: Client = Depends(GetSupabase)
+):
+    """
+    Get all orders in the same order group.
+    
+    Args:
+        order_group_id: The order group ID
+        UserId: Authenticated user ID
+        Db: Supabase client instance
+        
+    Returns:
+        List[OrderDetailResponse]: All orders in the group
+        
+    Raises:
+        NotFoundException: If order group not found or user doesn't own orders
+    """
+    Response = Db.table("order_details").select("*").eq("order_group_id", order_group_id).eq("customer_id", UserId).execute()
+    
+    if not Response.data:
+        raise NotFoundException(Detail="Order group not found")
+    
+    return [OrderDetailResponse(**order) for order in Response.data]
 
 
 @Router.get("/", response_model=List[CustomerOrderHistoryResponse])

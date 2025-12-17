@@ -24,6 +24,7 @@ class OrderStatus(str, Enum):
     PENDING = "pending"
     ACCEPTED = "accepted"
     REJECTED = "rejected"
+    AUTO_REJECTED = "auto_rejected"
     OUT_FOR_DELIVERY = "out_for_delivery"
     DELIVERED = "delivered"
     CANCELLED = "cancelled"
@@ -87,6 +88,7 @@ class OrderResponse(BaseModel):
     id: str = Field(validation_alias="id")
     poolId: str = Field(validation_alias="pool_id")
     customerId: str = Field(validation_alias="customer_id")
+    orderGroupId: Optional[str] = Field(None, validation_alias="order_group_id")
     restaurantId: Optional[str] = Field(None, validation_alias="restaurant_id")
     items: List[Dict[str, Any]] = Field(validation_alias="items")
     subtotal: int = Field(validation_alias="subtotal")
@@ -117,6 +119,7 @@ class OrderDetailResponse(BaseModel):
     """Model for detailed order response with related data."""
     
     orderId: str = Field(validation_alias="order_id")
+    orderGroupId: Optional[str] = Field(None, validation_alias="order_group_id")
     poolId: str = Field(validation_alias="pool_id")
     poolName: str = Field(validation_alias="pool_name")
     campusId: str = Field(validation_alias="campus_id")
@@ -166,6 +169,7 @@ class CustomerOrderHistoryResponse(BaseModel):
     
     customerId: str = Field(validation_alias="customer_id")
     orderId: str = Field(validation_alias="order_id")
+    orderGroupId: Optional[str] = Field(None, validation_alias="order_group_id")
     poolId: str = Field(validation_alias="pool_id")
     poolName: str = Field(validation_alias="pool_name")
     restaurantId: Optional[str] = Field(None, validation_alias="restaurant_id")
