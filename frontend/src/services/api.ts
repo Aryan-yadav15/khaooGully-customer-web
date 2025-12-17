@@ -194,6 +194,9 @@ export const admin = {
     const response = await api.put(`/admin/dishes/${dishId}`, dishData);
     return response.data;
   },
+  deleteDish: async (dishId: string) => {
+    await api.delete(`/admin/dishes/${dishId}`);
+  },
   bulkImportMenu: async (restaurantId: string, menuData: any) => {
     const response = await api.post(`/admin/restaurants/${restaurantId}/bulk-menu`, menuData);
     return response.data;

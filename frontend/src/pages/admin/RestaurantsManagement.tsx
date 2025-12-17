@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, Edit2, Trash2, X, Search, Filter, MapPin, Star, DollarSign, Clock, Upload, FileJson } from 'lucide-react';
-import { getRestaurants, admin } from '../../services/api';
+import { Plus, Edit2, Trash2, X, Search, Filter, MapPin, Star, DollarSign, Clock, Upload, FileJson, Download } from 'lucide-react';
+import { getRestaurants, getRestaurantMenu, admin } from '../../services/api';
 import type { Restaurant } from '../../types';
 
 const RestaurantsManagement: React.FC = () => {
@@ -10,6 +10,7 @@ const RestaurantsManagement: React.FC = () => {
   const [isMenuImportOpen, setIsMenuImportOpen] = useState(false);
   const [selectedRestaurantForMenu, setSelectedRestaurantForMenu] = useState<Restaurant | null>(null);
   const [jsonInput, setJsonInput] = useState('');
+  const [replaceExistingMenu, setReplaceExistingMenu] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -133,11 +134,24 @@ const RestaurantsManagement: React.FC = () => {
     
     try {
       const menuData = JSON.parse(jsonInput);
+      
+      // If replace mode is enabled, delete existing menu first
+      if (replaceExistingMenu) {
+        const existingMenu = await getRestaurantMenu(selectedRestaurantForMenu.id);
+        if (existingMenu.length > 0) {
+          // Delete all existing dishes
+          await Promise.all(
+            existingMenu.map(dish => admin.deleteDish(dish.id))
+          );
+        }
+      }
+      
       await admin.bulkImportMenu(selectedRestaurantForMenu.id, menuData);
       alert(`Successfully imported ${menuData.dishes?.length || 0} dishes!`);
       setIsMenuImportOpen(false);
       setJsonInput('');
       setSelectedRestaurantForMenu(null);
+      setReplaceExistingMenu(false);
     } catch (error: any) {
       console.error('Failed to import menu:', error);
       if (error instanceof SyntaxError) {
@@ -152,6 +166,41 @@ const RestaurantsManagement: React.FC = () => {
     setSelectedRestaurantForMenu(restaurant);
     setJsonInput('');
     setIsMenuImportOpen(true);
+  };
+
+  const handleExportMenu = async (restaurant: Restaurant) => {
+    try {
+      const menu = await getRestaurantMenu(restaurant.id);
+      
+      const exportData = {
+        restaurant_name: restaurant.name,
+        restaurant_id: restaurant.id,
+        exported_at: new Date().toISOString(),
+        dishes: menu.map(dish => ({
+          name: dish.name,
+          price: dish.price / 100, // Convert paise to rupees
+          veg: dish.veg,
+          category: dish.tags?.[0] || 'Other',
+          description: dish.description || '',
+          rating: dish.rating || 0,
+          image: dish.image || '',
+          customizations: dish.customizations || []
+        }))
+      };
+
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${restaurant.name.replace(/\s+/g, '_')}_menu_${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Failed to export menu:', error);
+      alert('Failed to export menu. Please try again.');
+    }
   };
 
   return (
@@ -244,6 +293,13 @@ const RestaurantsManagement: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => handleExportMenu(restaurant)}
+                        className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                        title="Export Menu JSON"
+                      >
+                        <Download className="w-4 h-4" />
+                      </button>
                       <button
                         onClick={() => openMenuImport(restaurant)}
                         className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
@@ -497,6 +553,23 @@ const RestaurantsManagement: React.FC = () => {
 
             <div className="flex-1 overflow-y-auto p-8">
               <div className="mb-6">
+                <div className="bg-yellow-50 border border-yellow-300 rounded-xl p-4 mb-4">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={replaceExistingMenu}
+                      onChange={(e) => setReplaceExistingMenu(e.target.checked)}
+                      className="w-5 h-5 text-lime-600 border-gray-300 rounded focus:ring-lime-500"
+                    />
+                    <div>
+                      <span className="font-bold text-yellow-900">Replace existing menu</span>
+                      <p className="text-xs text-yellow-700 mt-1">
+                        ⚠️ If checked, all existing dishes will be deleted before importing. If unchecked, new dishes will be added to the existing menu.
+                      </p>
+                    </div>
+                  </label>
+                </div>
+
                 <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
                   <h3 className="font-bold text-blue-900 mb-2 flex items-center gap-2">
                     <Upload className="w-4 h-4" />

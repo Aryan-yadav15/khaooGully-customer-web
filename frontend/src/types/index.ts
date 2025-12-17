@@ -51,6 +51,7 @@ export interface Dish {
   rating: number;
   isAvailable: boolean;
   tags?: string[];
+  customizations?: any[];
   createdAt?: string;
   updatedAt?: string;
 }

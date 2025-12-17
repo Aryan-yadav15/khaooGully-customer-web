@@ -156,6 +156,22 @@ async def UpdateDish(
     return DishResponse(**Response.data[0])
 
 
+@Router.delete("/dishes/{dishId}", status_code=status.HTTP_204_NO_CONTENT)
+async def DeleteDish(
+    dishId: str,
+    Db: Client = Depends(GetSupabaseAdmin),
+    Admin: dict = Depends(RequireAdmin)
+):
+    """Deletes a dish."""
+    
+    Response = Db.table("dishes").delete().eq("id", dishId).execute()
+    
+    if not Response.data:
+        raise NotFoundException(Detail="Dish not found")
+    
+    return None
+
+
 @Router.post("/restaurants/{restaurantId}/bulk-menu", status_code=status.HTTP_201_CREATED)
 async def BulkImportMenu(
     restaurantId: str,
