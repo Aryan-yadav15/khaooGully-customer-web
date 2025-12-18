@@ -194,7 +194,13 @@ def send_orders_to_backend(orders: List[Dict[str, Any]], backend_url: str, api_k
             "total_amount": order["total"],
             "payment_status": order.get("payment_status", ""),
             "order_status": "pending",
-            "created_at": order.get("created_at") or order.get("ordered_at")  # view might use 'ordered_at'
+            "created_at": order.get("created_at") or order.get("ordered_at"),  # view might use 'ordered_at'
+            # New amount breakdown fields (all in paise)
+            "subtotal": order.get("subtotal"),
+            "delivery_fee": order.get("delivery_fee"),
+            "platform_fee": order.get("platform_fee"),
+            "total_customer_paid": order.get("total"),
+            "amount_to_collect": order.get("subtotal")  # Restaurant receives the subtotal amount
         })
     
     payload = {"orders": formatted_orders}
