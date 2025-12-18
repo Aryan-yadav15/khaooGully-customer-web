@@ -360,14 +360,18 @@ async def ClosePool(
                 continue
             
             cumulative_items = list(data["items"].values())
-            formatted_total = format_rupees(data["total_value"])
             
             payload = {
                 "restaurantId": restaurant_id,
                 "restaurantName": restaurant_name,
                 "restaurantPhone": phone,
                 "cumulativeOrders": cumulative_items,
-                "totalOrderValue": formatted_total
+                "subtotal": format_rupees(data["subtotal"]),
+                "deliveryFees": format_rupees(data["delivery_fees"]),
+                "platformFees": format_rupees(data["platform_fees"]),
+                "totalCustomerPaid": format_rupees(data["total_customer_paid"]),
+                "amountToCollect": format_rupees(data["subtotal"]),
+                "note": "Please collect only the subtotal amount (items cost). Delivery & platform fees are handled separately."
             }
             
             success = send_to_webhook(payload, settings.RestaurantWebhookUrl)
@@ -376,7 +380,8 @@ async def ClosePool(
                 webhook_results["restaurants_notified"].append({
                     "restaurant_id": restaurant_id,
                     "restaurant_name": restaurant_name,
-                    "total_value": formatted_total
+                    "subtotal": format_rupees(data["subtotal"]),
+                    "total_customer_paid": format_rupees(data["total_customer_paid"])
                 })
             else:
                 webhook_results["restaurants_failed"].append({

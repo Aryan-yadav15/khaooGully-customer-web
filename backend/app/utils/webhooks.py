@@ -53,7 +53,10 @@ def build_restaurant_cumulative_orders(db_orders: List[Dict[str, Any]]) -> Dict[
         {
             "restaurant_id": {
                 "items": {"menu_item_id": {"menu_item_id", "name", "quantity"}},
-                "total_value": int
+                "subtotal": int (items cost only - what restaurant receives),
+                "delivery_fees": int (delivery charges),
+                "platform_fees": int (platform charges),
+                "total_customer_paid": int (full amount customer paid)
             }
         }
     """
@@ -62,15 +65,21 @@ def build_restaurant_cumulative_orders(db_orders: List[Dict[str, Any]]) -> Dict[
             "items": defaultdict(
                 lambda: {"menu_item_id": "", "name": "", "quantity": 0}
             ),
-            "total_value": 0,
+            "subtotal": 0,
+            "delivery_fees": 0,
+            "platform_fees": 0,
+            "total_customer_paid": 0,
         }
     )
 
     for order in db_orders:
         restaurant_id = order["restaurant_id"]
 
-        # Add this order's total value
-        restaurant_map[restaurant_id]["total_value"] += order["total"]
+        # Track all components separately
+        restaurant_map[restaurant_id]["subtotal"] += order.get("subtotal", 0)
+        restaurant_map[restaurant_id]["delivery_fees"] += order.get("delivery_fee", 0)
+        restaurant_map[restaurant_id]["platform_fees"] += order.get("platform_fee", 0)
+        restaurant_map[restaurant_id]["total_customer_paid"] += order.get("total", 0)
 
         # Process each menu item
         for item in order["items"]:

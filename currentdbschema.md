@@ -61,6 +61,7 @@
 | customer_addresses         | updated_at                  | timestamp with time zone | YES         | now()              |
 | customer_order_history     | customer_id                 | uuid                     | YES         | null               |
 | customer_order_history     | order_id                    | uuid                     | YES         | null               |
+| customer_order_history     | order_group_id              | uuid                     | YES         | null               |
 | customer_order_history     | pool_id                     | uuid                     | YES         | null               |
 | customer_order_history     | pool_name                   | text                     | YES         | null               |
 | customer_order_history     | restaurant_id               | uuid                     | YES         | null               |
@@ -96,6 +97,10 @@
 | customer_orders            | cancelled_at                | timestamp with time zone | YES         | null               |
 | customer_orders            | cancellation_reason         | text                     | YES         | null               |
 | customer_orders            | delivered_at                | timestamp with time zone | YES         | null               |
+| customer_orders            | driver_name                 | text                     | YES         | null               |
+| customer_orders            | driver_phone                | text                     | YES         | null               |
+| customer_orders            | otp                         | character varying        | YES         | null               |
+| customer_orders            | order_group_id              | uuid                     | YES         | null               |
 | customer_profile_summary   | id                          | uuid                     | YES         | null               |
 | customer_profile_summary   | full_name                   | text                     | YES         | null               |
 | customer_profile_summary   | email                       | text                     | YES         | null               |
@@ -133,6 +138,7 @@
 | customers                  | total_orders                | integer                  | YES         | 0                  |
 | customers                  | total_spent                 | integer                  | YES         | 0                  |
 | customers                  | last_order_at               | timestamp with time zone | YES         | null               |
+| customers                  | is_admin                    | boolean                  | YES         | false              |
 | dishes                     | id                          | uuid                     | NO          | uuid_generate_v4() |
 | dishes                     | restaurant_id               | uuid                     | NO          | null               |
 | dishes                     | name                        | text                     | NO          | null               |
@@ -153,20 +159,6 @@
 | favorite_restaurants       | customer_id                 | uuid                     | NO          | null               |
 | favorite_restaurants       | restaurant_id               | uuid                     | NO          | null               |
 | favorite_restaurants       | created_at                  | timestamp with time zone | YES         | now()              |
-| geography_columns          | f_table_catalog             | name                     | YES         | null               |
-| geography_columns          | f_table_schema              | name                     | YES         | null               |
-| geography_columns          | f_table_name                | name                     | YES         | null               |
-| geography_columns          | f_geography_column          | name                     | YES         | null               |
-| geography_columns          | coord_dimension             | integer                  | YES         | null               |
-| geography_columns          | srid                        | integer                  | YES         | null               |
-| geography_columns          | type                        | text                     | YES         | null               |
-| geometry_columns           | f_table_catalog             | character varying        | YES         | null               |
-| geometry_columns           | f_table_schema              | name                     | YES         | null               |
-| geometry_columns           | f_table_name                | name                     | YES         | null               |
-| geometry_columns           | f_geometry_column           | name                     | YES         | null               |
-| geometry_columns           | coord_dimension             | integer                  | YES         | null               |
-| geometry_columns           | srid                        | integer                  | YES         | null               |
-| geometry_columns           | type                        | character varying        | YES         | null               |
 | notifications              | id                          | uuid                     | NO          | uuid_generate_v4() |
 | notifications              | customer_id                 | uuid                     | NO          | null               |
 | notifications              | title                       | text                     | NO          | null               |
@@ -177,6 +169,7 @@
 | notifications              | order_id                    | uuid                     | YES         | null               |
 | notifications              | created_at                  | timestamp with time zone | YES         | now()              |
 | order_details              | order_id                    | uuid                     | YES         | null               |
+| order_details              | order_group_id              | uuid                     | YES         | null               |
 | order_details              | pool_id                     | uuid                     | YES         | null               |
 | order_details              | pool_name                   | text                     | YES         | null               |
 | order_details              | campus_id                   | uuid                     | YES         | null               |
@@ -209,6 +202,9 @@
 | order_details              | cancelled_at                | timestamp with time zone | YES         | null               |
 | order_details              | cancellation_reason         | text                     | YES         | null               |
 | order_details              | delivered_at                | timestamp with time zone | YES         | null               |
+| order_details              | driver_name                 | text                     | YES         | null               |
+| order_details              | driver_phone                | text                     | YES         | null               |
+| order_details              | otp                         | character varying        | YES         | null               |
 | order_details              | delivery_window             | text                     | YES         | null               |
 | order_details              | fleetbase_pool_id           | text                     | YES         | null               |
 | order_details              | ordered_at                  | timestamp with time zone | YES         | null               |
@@ -229,6 +225,25 @@
 | order_pools                | is_active                   | boolean                  | YES         | true               |
 | order_pools                | participating_restaurants   | jsonb                    | YES         | '[]'::jsonb        |
 | order_pools                | expected_delivery_time      | timestamp with time zone | YES         | null               |
+| order_pools                | status                      | text                     | YES         | null               |
+| pool_details               | id                          | uuid                     | YES         | null               |
+| pool_details               | name                        | text                     | YES         | null               |
+| pool_details               | status                      | text                     | YES         | null               |
+| pool_details               | collection_start            | timestamp with time zone | YES         | null               |
+| pool_details               | collection_end              | timestamp with time zone | YES         | null               |
+| pool_details               | delivery_window             | text                     | YES         | null               |
+| pool_details               | expected_delivery_time      | timestamp with time zone | YES         | null               |
+| pool_details               | campus_name                 | text                     | YES         | null               |
+| pool_details               | campus_code                 | text                     | YES         | null               |
+| pool_details               | hotspot_location            | text                     | YES         | null               |
+| pool_details               | participating_restaurants   | jsonb                    | YES         | null               |
+| pool_details               | max_orders                  | integer                  | YES         | null               |
+| pool_details               | delivery_fee_per_order      | integer                  | YES         | null               |
+| pool_details               | is_active                   | boolean                  | YES         | null               |
+| pool_details               | total_orders                | integer                  | YES         | null               |
+| pool_details               | total_amount                | integer                  | YES         | null               |
+| pool_details               | created_at                  | timestamp with time zone | YES         | null               |
+| pool_details               | updated_at                  | timestamp with time zone | YES         | null               |
 | pool_restaurant_list       | pool_id                     | uuid                     | YES         | null               |
 | pool_restaurant_list       | pool_name                   | text                     | YES         | null               |
 | pool_restaurant_list       | campus_id                   | uuid                     | YES         | null               |
@@ -403,11 +418,6 @@
 | search_history             | search_query                | text                     | NO          | null               |
 | search_history             | results_count               | integer                  | YES         | 0                  |
 | search_history             | searched_at                 | timestamp with time zone | YES         | now()              |
-| spatial_ref_sys            | srid                        | integer                  | NO          | null               |
-| spatial_ref_sys            | auth_name                   | character varying        | YES         | null               |
-| spatial_ref_sys            | auth_srid                   | integer                  | YES         | null               |
-| spatial_ref_sys            | srtext                      | character varying        | YES         | null               |
-| spatial_ref_sys            | proj4text                   | character varying        | YES         | null               |
 | support_messages           | id                          | uuid                     | NO          | uuid_generate_v4() |
 | support_messages           | ticket_id                   | uuid                     | NO          | null               |
 | support_messages           | sender_id                   | uuid                     | NO          | null               |
@@ -441,36 +451,91 @@
 
 
 
-## the views are
-| table_name                 | view_definition                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| geometry_columns           | null                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| geography_columns          | null                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| pool_stats                 |  SELECT p.id AS pool_id,
-    p.name,
-    p.manual_status AS status,
+
+
+
+
+
+
+### These are the views
+| table_name                 | view_definition                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| affiliate_dashboard        |  SELECT pc.affiliate_id,
+    pc.affiliate_name,
+    pc.code AS affiliate_code,
+    count(DISTINCT pcu.customer_id) AS customers_referred,
+    count(DISTINCT pcu.order_id) AS total_orders,
+    sum(pcu.order_total) AS total_order_value,
+    sum(pcu.discount_amount) AS total_discount_given,
+    sum(pcu.affiliate_commission_earned) AS total_commission_earned,
+    avg(pcu.order_total) AS avg_order_value,
+    pc.created_at AS partnership_started,
+    max(pcu.used_at) AS last_order_at
+   FROM (promo_codes pc
+     JOIN promo_code_usage pcu ON ((pcu.promo_code_id = pc.id)))
+  WHERE (pc.code_type = 'affiliate'::text)
+  GROUP BY pc.affiliate_id, pc.affiliate_name, pc.code, pc.created_at
+  ORDER BY (sum(pcu.affiliate_commission_earned)) DESC;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| cart_summary               |  SELECT c.id AS cart_id,
+    c.customer_id,
+    c.pool_id,
+    p.name AS pool_name,
     p.campus_id,
-    c.name AS campus_name,
-    c.hotspot_location,
-    p.collection_start,
-    p.collection_end,
-    p.delivery_window,
-    p.max_orders,
+    count(DISTINCT ci.restaurant_id) AS restaurant_count,
+    count(ci.id) AS item_count,
+    sum(ci.quantity) AS total_quantity,
+    sum((ci.price * ci.quantity)) AS cart_subtotal,
     p.delivery_fee_per_order,
-    count(DISTINCT o.id) AS current_order_count,
-    count(DISTINCT o.customer_id) AS unique_customers,
-    sum(o.total) AS total_revenue,
-    ((p.max_orders IS NULL) OR (count(DISTINCT o.id) < p.max_orders)) AS is_accepting_orders,
-    ((now() >= p.collection_start) AND (now() <= p.collection_end)) AS is_collection_window_open,
-    p.is_active,
-    p.fleetbase_pool_id,
-    p.created_at,
-    p.updated_at
-   FROM ((order_pools p
-     LEFT JOIN campuses c ON ((c.id = p.campus_id)))
-     LEFT JOIN customer_orders o ON ((o.pool_id = p.id)))
-  GROUP BY p.id, p.name, p.manual_status, p.campus_id, c.name, c.hotspot_location, p.collection_start, p.collection_end, p.delivery_window, p.max_orders, p.delivery_fee_per_order, p.is_active, p.fleetbase_pool_id, p.created_at, p.updated_at;                                                                                                                       |
+    c.created_at,
+    c.updated_at
+   FROM ((cart c
+     JOIN order_pools p ON ((p.id = c.pool_id)))
+     LEFT JOIN cart_items ci ON ((ci.cart_id = c.id)))
+  GROUP BY c.id, c.customer_id, c.pool_id, p.name, p.campus_id, p.delivery_fee_per_order, c.created_at, c.updated_at;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| customer_order_history     |  SELECT o.customer_id,
+    o.id AS order_id,
+    o.order_group_id,
+    o.pool_id,
+    p.name AS pool_name,
+    o.restaurant_id,
+    r.name AS restaurant_name,
+    r.image AS restaurant_image,
+    o.items,
+    o.total,
+    o.status,
+    o.payment_status,
+    o.created_at AS ordered_at,
+    o.delivered_at,
+    ( SELECT count(*) AS count
+           FROM jsonb_array_elements(o.items) jsonb_array_elements(value)) AS item_count
+   FROM ((customer_orders o
+     JOIN order_pools p ON ((p.id = o.pool_id)))
+     LEFT JOIN restaurants r ON ((r.id = o.restaurant_id)))
+  ORDER BY o.created_at DESC;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| customer_profile_summary   |  SELECT c.id,
+    c.full_name,
+    c.email,
+    c.phone,
+    c.avatar_url,
+    c.referral_code,
+    c.total_orders,
+    c.total_spent,
+    c.last_order_at,
+    c.created_at AS member_since,
+    COALESCE(w.balance, 0) AS wallet_balance,
+    count(DISTINCT fa.id) AS favorite_restaurants_count,
+    count(DISTINCT fd.id) AS favorite_dishes_count,
+    count(DISTINCT ca.id) AS saved_addresses_count
+   FROM ((((customers c
+     LEFT JOIN customer_wallet w ON ((w.customer_id = c.id)))
+     LEFT JOIN favorite_restaurants fa ON ((fa.customer_id = c.id)))
+     LEFT JOIN favorite_dishes fd ON ((fd.customer_id = c.id)))
+     LEFT JOIN customer_addresses ca ON ((ca.customer_id = c.id)))
+  GROUP BY c.id, c.full_name, c.email, c.phone, c.avatar_url, c.referral_code, c.total_orders, c.total_spent, c.last_order_at, c.created_at, w.balance;                                                                                                                                                                                                                                                                                                                                                                                                           |
+| geography_columns          | null                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| geometry_columns           | null                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | order_details              |  SELECT o.id AS order_id,
+    o.order_group_id,
     o.pool_id,
     p.name AS pool_name,
     p.campus_id,
@@ -503,6 +568,9 @@
     o.cancelled_at,
     o.cancellation_reason,
     o.delivered_at,
+    o.driver_name,
+    o.driver_phone,
+    o.otp,
     p.delivery_window,
     p.fleetbase_pool_id,
     o.created_at AS ordered_at,
@@ -512,22 +580,30 @@
      JOIN campuses c ON ((c.id = p.campus_id)))
      JOIN customers cust ON ((cust.id = o.customer_id)))
      LEFT JOIN restaurants r ON ((r.id = o.restaurant_id))); |
-| restaurant_menu            |  SELECT r.id AS restaurant_id,
-    r.name AS restaurant_name,
-    r.is_active AS restaurant_active,
-    d.id AS dish_id,
-    d.name AS dish_name,
-    d.description,
-    d.price,
-    d.image,
-    d.veg,
-    d.rating,
-    d.tags,
-    d.is_available AS dish_available
-   FROM (restaurants r
-     LEFT JOIN dishes d ON ((d.restaurant_id = r.id)))
-  WHERE (r.is_active = true)
-  ORDER BY r.name, d.name;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| pool_details               |  SELECT p.id,
+    p.name,
+    COALESCE(p.status, p.manual_status, 'open'::text) AS status,
+    p.collection_start,
+    p.collection_end,
+    p.delivery_window,
+    p.expected_delivery_time,
+    c.name AS campus_name,
+    c.code AS campus_code,
+    c.hotspot_location,
+    COALESCE(p.participating_restaurants, '[]'::jsonb) AS participating_restaurants,
+    p.max_orders,
+    p.delivery_fee_per_order,
+    p.is_active,
+    (COALESCE(( SELECT count(*) AS count
+           FROM customer_orders co
+          WHERE (co.pool_id = p.id)), (0)::bigint))::integer AS total_orders,
+    (COALESCE(( SELECT sum(co.total) AS sum
+           FROM customer_orders co
+          WHERE (co.pool_id = p.id)), (0)::bigint))::integer AS total_amount,
+    p.created_at,
+    p.updated_at
+   FROM (order_pools p
+     JOIN campuses c ON ((p.campus_id = c.id)));                                                                                                                                                                                                                                                                                                                                                                                                         |
 | pool_restaurant_list       |  SELECT p.id AS pool_id,
     p.name AS pool_name,
     p.campus_id,
@@ -543,62 +619,51 @@
      JOIN pool_restaurants pr ON ((pr.pool_id = p.id)))
      JOIN restaurants r ON ((r.id = pr.restaurant_id)))
   WHERE (pr.is_active = true)
-  ORDER BY p.name, r.name;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| customer_order_history     |  SELECT o.customer_id,
-    o.id AS order_id,
-    o.pool_id,
-    p.name AS pool_name,
-    o.restaurant_id,
-    r.name AS restaurant_name,
-    r.image AS restaurant_image,
-    o.items,
-    o.total,
-    o.status,
-    o.payment_status,
-    o.created_at AS ordered_at,
-    o.delivered_at,
-    ( SELECT count(*) AS count
-           FROM jsonb_array_elements(o.items) jsonb_array_elements(value)) AS item_count
-   FROM ((customer_orders o
-     JOIN order_pools p ON ((p.id = o.pool_id)))
-     LEFT JOIN restaurants r ON ((r.id = o.restaurant_id)))
-  ORDER BY o.created_at DESC;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| cart_summary               |  SELECT c.id AS cart_id,
-    c.customer_id,
-    c.pool_id,
-    p.name AS pool_name,
+  ORDER BY p.name, r.name;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| pool_stats                 |  SELECT p.id AS pool_id,
+    p.name,
+    p.manual_status AS status,
     p.campus_id,
-    count(DISTINCT ci.restaurant_id) AS restaurant_count,
-    count(ci.id) AS item_count,
-    sum(ci.quantity) AS total_quantity,
-    sum((ci.price * ci.quantity)) AS cart_subtotal,
+    c.name AS campus_name,
+    c.hotspot_location,
+    p.collection_start,
+    p.collection_end,
+    p.delivery_window,
+    p.max_orders,
     p.delivery_fee_per_order,
-    c.created_at,
-    c.updated_at
-   FROM ((cart c
-     JOIN order_pools p ON ((p.id = c.pool_id)))
-     LEFT JOIN cart_items ci ON ((ci.cart_id = c.id)))
-  GROUP BY c.id, c.customer_id, c.pool_id, p.name, p.campus_id, p.delivery_fee_per_order, c.created_at, c.updated_at;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| customer_profile_summary   |  SELECT c.id,
-    c.full_name,
-    c.email,
-    c.phone,
-    c.avatar_url,
-    c.referral_code,
-    c.total_orders,
-    c.total_spent,
-    c.last_order_at,
-    c.created_at AS member_since,
-    COALESCE(w.balance, 0) AS wallet_balance,
-    count(DISTINCT fa.id) AS favorite_restaurants_count,
-    count(DISTINCT fd.id) AS favorite_dishes_count,
-    count(DISTINCT ca.id) AS saved_addresses_count
-   FROM ((((customers c
-     LEFT JOIN customer_wallet w ON ((w.customer_id = c.id)))
-     LEFT JOIN favorite_restaurants fa ON ((fa.customer_id = c.id)))
-     LEFT JOIN favorite_dishes fd ON ((fd.customer_id = c.id)))
-     LEFT JOIN customer_addresses ca ON ((ca.customer_id = c.id)))
-  GROUP BY c.id, c.full_name, c.email, c.phone, c.avatar_url, c.referral_code, c.total_orders, c.total_spent, c.last_order_at, c.created_at, w.balance;                                                                                                                                                                                                                                                                                                                                   |
+    count(DISTINCT o.id) AS current_order_count,
+    count(DISTINCT o.customer_id) AS unique_customers,
+    sum(o.total) AS total_revenue,
+    ((p.max_orders IS NULL) OR (count(DISTINCT o.id) < p.max_orders)) AS is_accepting_orders,
+    ((now() >= p.collection_start) AND (now() <= p.collection_end)) AS is_collection_window_open,
+    p.is_active,
+    p.fleetbase_pool_id,
+    p.created_at,
+    p.updated_at
+   FROM ((order_pools p
+     LEFT JOIN campuses c ON ((c.id = p.campus_id)))
+     LEFT JOIN customer_orders o ON ((o.pool_id = p.id)))
+  GROUP BY p.id, p.name, p.manual_status, p.campus_id, c.name, c.hotspot_location, p.collection_start, p.collection_end, p.delivery_window, p.max_orders, p.delivery_fee_per_order, p.is_active, p.fleetbase_pool_id, p.created_at, p.updated_at;                                                                                                                                                                                               |
+| pools_with_computed_status |  SELECT id,
+    name,
+    campus_id,
+    collection_start,
+    collection_end,
+    delivery_window,
+    max_orders,
+    delivery_fee_per_order,
+    manual_status,
+    fleetbase_pool_id,
+    created_at,
+    updated_at,
+        CASE
+            WHEN (manual_status = 'closed'::text) THEN 'closed'::text
+            WHEN (manual_status = 'synced'::text) THEN 'synced'::text
+            WHEN (collection_end < CURRENT_TIMESTAMP) THEN 'closed'::text
+            WHEN (collection_start > CURRENT_TIMESTAMP) THEN 'scheduled'::text
+            ELSE 'open'::text
+        END AS computed_status
+   FROM order_pools;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | promo_code_analytics       |  SELECT pc.id AS promo_code_id,
     pc.code,
     pc.code_type,
@@ -623,40 +688,20 @@
     max(pcu.used_at) AS last_used_at
    FROM (promo_codes pc
      LEFT JOIN promo_code_usage pcu ON ((pcu.promo_code_id = pc.id)))
-  GROUP BY pc.id, pc.code, pc.code_type, pc.description, pc.discount_type, pc.discount_value, pc.affiliate_id, pc.affiliate_name, pc.affiliate_commission_type, pc.affiliate_commission_value, pc.is_active, pc.valid_from, pc.valid_until, pc.usage_limit;                                                                                                                  |
-| affiliate_dashboard        |  SELECT pc.affiliate_id,
-    pc.affiliate_name,
-    pc.code AS affiliate_code,
-    count(DISTINCT pcu.customer_id) AS customers_referred,
-    count(DISTINCT pcu.order_id) AS total_orders,
-    sum(pcu.order_total) AS total_order_value,
-    sum(pcu.discount_amount) AS total_discount_given,
-    sum(pcu.affiliate_commission_earned) AS total_commission_earned,
-    avg(pcu.order_total) AS avg_order_value,
-    pc.created_at AS partnership_started,
-    max(pcu.used_at) AS last_order_at
-   FROM (promo_codes pc
-     JOIN promo_code_usage pcu ON ((pcu.promo_code_id = pc.id)))
-  WHERE (pc.code_type = 'affiliate'::text)
-  GROUP BY pc.affiliate_id, pc.affiliate_name, pc.code, pc.created_at
-  ORDER BY (sum(pcu.affiliate_commission_earned)) DESC;                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| pools_with_computed_status |  SELECT id,
-    name,
-    campus_id,
-    collection_start,
-    collection_end,
-    delivery_window,
-    max_orders,
-    delivery_fee_per_order,
-    manual_status,
-    fleetbase_pool_id,
-    created_at,
-    updated_at,
-        CASE
-            WHEN (manual_status = 'closed'::text) THEN 'closed'::text
-            WHEN (manual_status = 'synced'::text) THEN 'synced'::text
-            WHEN (collection_end < CURRENT_TIMESTAMP) THEN 'closed'::text
-            WHEN (collection_start > CURRENT_TIMESTAMP) THEN 'scheduled'::text
-            ELSE 'open'::text
-        END AS computed_status
-   FROM order_pools;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+  GROUP BY pc.id, pc.code, pc.code_type, pc.description, pc.discount_type, pc.discount_value, pc.affiliate_id, pc.affiliate_name, pc.affiliate_commission_type, pc.affiliate_commission_value, pc.is_active, pc.valid_from, pc.valid_until, pc.usage_limit;                                                                                                                                                                                          |
+| restaurant_menu            |  SELECT r.id AS restaurant_id,
+    r.name AS restaurant_name,
+    r.is_active AS restaurant_active,
+    d.id AS dish_id,
+    d.name AS dish_name,
+    d.description,
+    d.price,
+    d.image,
+    d.veg,
+    d.rating,
+    d.tags,
+    d.is_available AS dish_available
+   FROM (restaurants r
+     LEFT JOIN dishes d ON ((d.restaurant_id = r.id)))
+  WHERE (r.is_active = true)
+  ORDER BY r.name, d.name;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |

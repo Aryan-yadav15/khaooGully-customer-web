@@ -203,7 +203,7 @@ const PoolsManagement: React.FC = () => {
         name: 'Auto test pool',
         campus_id: kingsPalaceCampus.id,
         description: 'Quick test pool for development',
-        delivery_fee_per_order: 0,
+        delivery_fee_per_order: 1000,
         collection_start: now.toISOString(),
         collection_end: endTime.toISOString(),
         expected_delivery_time: deliveryTime.toISOString(),
