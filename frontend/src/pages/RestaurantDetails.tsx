@@ -239,24 +239,24 @@ const RestaurantDetails: React.FC = () => {
                         </div>
                         
                         {!isCollapsed && (
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
                             {items.map((dish) => {
                               const quantity = getQuantityInCart(dish.id);
                               
                               return (
-                                <div key={dish.id} className={`bg-white p-5 rounded-3xl shadow-sm border transition-all duration-200 flex flex-col h-full group ${quantity > 0 ? 'border-primary ring-2 ring-primary' : 'border-gray-100 hover:shadow-lg'}`}>
+                                <div key={dish.id} className={`bg-white p-4 md:p-5 rounded-2xl md:rounded-3xl shadow-sm border transition-all duration-200 flex flex-row md:flex-col gap-4 md:gap-0 h-full group ${quantity > 0 ? 'border-primary ring-2 ring-primary' : 'border-gray-100 hover:shadow-lg'}`}>
                                   {/* Image Container */}
-                                  <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden mb-5 bg-gray-50">
+                                  <div className="relative w-32 h-32 md:w-full md:aspect-[4/3] md:h-auto flex-shrink-0 rounded-xl md:rounded-2xl overflow-hidden bg-gray-50 md:mb-5">
                                     {dish.image ? (
                                       <img src={dish.image} alt={dish.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                                     ) : (
                                       <div className="w-full h-full flex items-center justify-center text-gray-300">
-                                        <div className="w-12 h-12 rounded-full border-4 border-current opacity-20"></div>
+                                        <div className="w-8 h-8 md:w-12 md:h-12 rounded-full border-2 md:border-4 border-current opacity-20"></div>
                                       </div>
                                     )}
-                                    {/* Rating Badge */}
+                                    {/* Rating Badge - Desktop Only */}
                                     {dish.rating && (
-                                       <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-xl text-sm font-bold flex items-center gap-1.5 shadow-sm">
+                                       <div className="hidden md:flex absolute top-4 left-4 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-xl text-sm font-bold items-center gap-1.5 shadow-sm">
                                          <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
                                          {dish.rating}
                                        </div>
@@ -264,46 +264,64 @@ const RestaurantDetails: React.FC = () => {
                                   </div>
 
                                   {/* Content */}
-                                  <div className="flex-1 flex flex-col">
-                                    <div className="flex justify-between items-start gap-3 mb-3">
-                                      <h3 className="font-bold text-gray-900 text-xl md:text-2xl leading-tight line-clamp-2">{dish.name}</h3>
-                                      {/* Veg/Non-veg Icon */}
-                                      <div className={`flex-shrink-0 mt-1.5 ${dish.veg ? 'border-green-600' : 'border-red-600'} border-2 rounded p-[2px]`}>
+                                  <div className="flex-1 flex flex-col min-w-0">
+                                    <div className="flex justify-between items-start gap-2 md:gap-3 mb-1 md:mb-3">
+                                      <h3 className="font-bold text-gray-900 text-base md:text-2xl leading-tight line-clamp-2">{dish.name}</h3>
+                                      {/* Veg/Non-veg Icon - Desktop Only */}
+                                      <div className={`hidden md:block flex-shrink-0 mt-1.5 ${dish.veg ? 'border-green-600' : 'border-red-600'} border-2 rounded p-[2px]`}>
                                         <div className={`w-2.5 h-2.5 rounded-full ${dish.veg ? 'bg-green-600' : 'bg-red-600'}`}></div>
                                       </div>
                                     </div>
                                     
-                                    <p className="text-base text-gray-500 line-clamp-2 mb-6 leading-relaxed">{dish.description}</p>
+                                    <p className="text-xs md:text-base text-gray-500 line-clamp-2 mb-2 md:mb-6 leading-relaxed">{dish.description}</p>
                                     
                                     <div className="mt-auto">
-                                      <div className="flex items-center justify-between mb-5">
-                                         <span className="font-bold text-2xl text-gray-900">₹{dish.price / 100}</span>
+                                      <div className="flex items-center justify-between mb-2 md:mb-5">
+                                         <span className="font-bold text-lg md:text-2xl text-gray-900">₹{dish.price / 100}</span>
                                       </div>
 
-                                      {quantity === 0 ? (
-                                        <button 
-                                          onClick={() => handleAdd(dish)}
-                                          className="w-full py-4 bg-gray-50 text-primary hover:bg-primary hover:text-white rounded-2xl font-bold text-lg transition-all flex items-center justify-center gap-2.5 group-hover:bg-primary/5"
-                                        >
-                                          Add to Dish
-                                        </button>
-                                      ) : (
-                                        <div className="flex items-center justify-between bg-primary text-white rounded-2xl p-2 shadow-lg shadow-primary/25">
-                                          <button 
-                                            onClick={() => handleDecrement(dish.id)}
-                                            className="w-12 h-12 flex items-center justify-center hover:bg-white/20 rounded-xl transition-colors"
-                                          >
-                                            <Minus className="w-6 h-6" />
-                                          </button>
-                                          <span className="font-bold text-xl">{quantity}</span>
-                                          <button 
-                                            onClick={() => handleIncrement(dish.id)}
-                                            className="w-12 h-12 flex items-center justify-center hover:bg-white/20 rounded-xl transition-colors"
-                                          >
-                                            <Plus className="w-6 h-6" />
-                                          </button>
+                                      <div className="flex items-center gap-3 md:block">
+                                        {/* Mobile Rating & Veg */}
+                                        <div className="flex items-center gap-2 md:hidden">
+                                            {dish.rating && (
+                                                <div className="bg-gray-100 px-1.5 py-0.5 rounded text-[10px] font-bold flex items-center gap-1 flex-shrink-0">
+                                                    <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                                                    {dish.rating}
+                                                </div>
+                                            )}
+                                            <div className={`flex-shrink-0 ${dish.veg ? 'border-green-600' : 'border-red-600'} border rounded-sm p-[1px]`}>
+                                                <div className={`w-1.5 h-1.5 rounded-full ${dish.veg ? 'bg-green-600' : 'bg-red-600'}`}></div>
+                                            </div>
                                         </div>
-                                      )}
+
+                                        {/* Add Button */}
+                                        <div className="flex-1 md:w-full">
+                                            {quantity === 0 ? (
+                                                <button 
+                                                onClick={() => handleAdd(dish)}
+                                                className="w-full py-2 md:py-4 bg-gray-50 text-primary hover:bg-primary hover:text-white rounded-xl md:rounded-2xl font-bold text-sm md:text-lg transition-all flex items-center justify-center gap-1.5 md:gap-2.5 group-hover:bg-primary/5"
+                                                >
+                                                Add <span className="hidden md:inline">to Cart</span>
+                                                </button>
+                                            ) : (
+                                                <div className="flex items-center justify-between bg-primary text-white rounded-xl md:rounded-2xl p-1 md:p-2 shadow-lg shadow-primary/25">
+                                                <button 
+                                                    onClick={() => handleDecrement(dish.id)}
+                                                    className="w-8 h-8 md:w-12 md:h-12 flex items-center justify-center hover:bg-white/20 rounded-lg md:rounded-xl transition-colors"
+                                                >
+                                                    <Minus className="w-4 h-4 md:w-6 md:h-6" />
+                                                </button>
+                                                <span className="font-bold text-base md:text-xl">{quantity}</span>
+                                                <button 
+                                                    onClick={() => handleIncrement(dish.id)}
+                                                    className="w-8 h-8 md:w-12 md:h-12 flex items-center justify-center hover:bg-white/20 rounded-lg md:rounded-xl transition-colors"
+                                                >
+                                                    <Plus className="w-4 h-4 md:w-6 md:h-6" />
+                                                </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                      </div>
                                     </div>
                                   </div>
                                 </div>
