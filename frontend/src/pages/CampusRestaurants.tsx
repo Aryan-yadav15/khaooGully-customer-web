@@ -54,7 +54,7 @@ const CampusRestaurants: React.FC = () => {
   const [bannerRestaurants, setBannerRestaurants] = useState<
     Record<string, PromotedRestaurant[]>
   >({});
-  const prevCampusIdRef = React.useRef<string | undefined>();
+  const prevCampusIdRef = React.useRef<string | undefined>(undefined);
 
   useEffect(() => {
     const fetchData = async () => {
