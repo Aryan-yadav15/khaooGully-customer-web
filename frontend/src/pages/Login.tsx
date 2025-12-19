@@ -22,7 +22,8 @@ const Login: React.FC = () => {
             <span className="text-4xl">🍱</span>
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-3">Welcome to KhaoGully</h1>
-          <p className="text-gray-500">Sign in to access your profile and start ordering</p>
+          <p className="text-gray-500 font-bold">Made for KIITians by KIITians with 🫶</p>
+          <p className="text-gray-400">Please use you KIIT email ID</p>
         </div>
 
         <div className="bg-white rounded-2xl md:rounded-3xl shadow-xl shadow-gray-100 border border-gray-100 p-8 md:p-10">

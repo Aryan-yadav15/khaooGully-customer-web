@@ -88,9 +88,29 @@ const RestaurantDetails: React.FC = () => {
       sections[category].push(dish);
     });
 
-    // If no tags at all in the entire menu, just return one section
+    // Sort each category: items with images first, then items without images
+    Object.keys(sections).forEach(category => {
+      sections[category].sort((a, b) => {
+        const aHasImage = a.image && a.image.trim() !== '';
+        const bHasImage = b.image && b.image.trim() !== '';
+        
+        if (aHasImage && !bHasImage) return -1;
+        if (!aHasImage && bHasImage) return 1;
+        return 0;
+      });
+    });
+
+    // If no tags at all in the entire menu, just return one section with sorted items
     if (!hasTags) {
-      return { 'All Items': filteredMenu };
+      const sortedItems = [...filteredMenu].sort((a, b) => {
+        const aHasImage = a.image && a.image.trim() !== '';
+        const bHasImage = b.image && b.image.trim() !== '';
+        
+        if (aHasImage && !bHasImage) return -1;
+        if (!aHasImage && bHasImage) return 1;
+        return 0;
+      });
+      return { 'All Items': sortedItems };
     }
 
     return sections;
@@ -245,28 +265,24 @@ const RestaurantDetails: React.FC = () => {
                               
                               return (
                                 <div key={dish.id} className={`bg-white p-4 md:p-5 rounded-2xl md:rounded-3xl shadow-sm border transition-all duration-200 flex flex-row md:flex-col gap-4 md:gap-0 h-full group ${quantity > 0 ? 'border-primary ring-2 ring-primary' : 'border-gray-100 hover:shadow-lg'}`}>
-                                  {/* Image Container */}
-                                  <div className="relative w-32 h-32 md:w-full md:aspect-[4/3] md:h-auto flex-shrink-0 rounded-xl md:rounded-2xl overflow-hidden bg-gray-50 md:mb-5">
-                                    {dish.image ? (
+                                  {/* Image Container - Only show if image exists */}
+                                  {dish.image && dish.image.trim() !== '' && (
+                                    <div className="relative w-32 h-32 md:w-full md:aspect-[4/3] md:h-auto flex-shrink-0 rounded-xl md:rounded-2xl overflow-hidden bg-gray-50 md:mb-5">
                                       <img src={dish.image} alt={dish.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                                    ) : (
-                                      <div className="w-full h-full flex items-center justify-center text-gray-300">
-                                        <div className="w-8 h-8 md:w-12 md:h-12 rounded-full border-2 md:border-4 border-current opacity-20"></div>
-                                      </div>
-                                    )}
-                                    {/* Rating Badge - Desktop Only */}
-                                    {dish.rating && (
-                                       <div className="hidden md:flex absolute top-4 left-4 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-xl text-sm font-bold items-center gap-1.5 shadow-sm">
-                                         <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-                                         {dish.rating}
-                                       </div>
-                                    )}
-                                  </div>
+                                      {/* Rating Badge - Desktop Only */}
+                                      {dish.rating && (
+                                         <div className="hidden md:flex absolute top-4 left-4 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-xl text-sm font-bold items-center gap-1.5 shadow-sm">
+                                           <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                                           {dish.rating}
+                                         </div>
+                                      )}
+                                    </div>
+                                  )}
 
                                   {/* Content */}
                                   <div className="flex-1 flex flex-col min-w-0">
                                     <div className="flex justify-between items-start gap-2 md:gap-3 mb-1 md:mb-3">
-                                      <h3 className="font-bold text-gray-900 text-base md:text-2xl leading-tight line-clamp-2">{dish.name}</h3>
+                                      <h3 className="font-bold text-gray-900 text-base md:text-xl leading-tight line-clamp-2">{dish.name}</h3>
                                       {/* Veg/Non-veg Icon - Desktop Only */}
                                       <div className={`hidden md:block flex-shrink-0 mt-1.5 ${dish.veg ? 'border-green-600' : 'border-red-600'} border-2 rounded p-[2px]`}>
                                         <div className={`w-2.5 h-2.5 rounded-full ${dish.veg ? 'bg-green-600' : 'bg-red-600'}`}></div>

@@ -11,6 +11,8 @@ from decimal import Decimal
 class RestaurantBase(BaseModel):
     """Base restaurant model."""
     
+    model_config = {"populate_by_name": True}
+    
     name: str = Field(..., min_length=1, max_length=200)
     address: str = Field(..., min_length=1, max_length=500)
     latitude: Decimal = Field(..., ge=-90, le=90)
@@ -18,8 +20,8 @@ class RestaurantBase(BaseModel):
     phone: Optional[str] = Field(None, max_length=20)
     email: Optional[EmailStr] = None
     location: Optional[str] = Field(None, max_length=200)
-    deliveryTime: int = Field(default=30, ge=0, le=180, validation_alias="delivery_time", serialization_alias="delivery_time")
-    costForTwo: int = Field(default=40000, ge=0, validation_alias="cost_for_two", serialization_alias="cost_for_two")
+    deliveryTime: int = Field(default=30, ge=0, le=180, validation_alias="delivery_time", serialization_alias="deliveryTime")
+    costForTwo: int = Field(default=40000, ge=0, validation_alias="cost_for_two", serialization_alias="costForTwo")
     cuisine: List[str] = Field(default_factory=list)
     image: Optional[str] = None
 
@@ -27,7 +29,7 @@ class RestaurantBase(BaseModel):
 class RestaurantCreate(RestaurantBase):
     """Model for creating a restaurant."""
     
-    isActive: bool = Field(True, validation_alias="is_active", serialization_alias="is_active")
+    isActive: bool = Field(True, validation_alias="is_active", serialization_alias="isActive")
     rating: Decimal = Field(default=0.0, ge=0, le=5)
 
 
@@ -50,26 +52,24 @@ class RestaurantUpdate(BaseModel):
     phone: Optional[str] = Field(None, max_length=20)
     email: Optional[EmailStr] = None
     location: Optional[str] = Field(None, max_length=200)
-    deliveryTime: Optional[int] = Field(None, ge=0, le=180, validation_alias="delivery_time", serialization_alias="delivery_time")
-    costForTwo: Optional[int] = Field(None, ge=0, validation_alias="cost_for_two", serialization_alias="cost_for_two")
+    deliveryTime: Optional[int] = Field(None, ge=0, le=180, validation_alias="delivery_time", serialization_alias="deliveryTime")
+    costForTwo: Optional[int] = Field(None, ge=0, validation_alias="cost_for_two", serialization_alias="costForTwo")
     cuisine: Optional[List[str]] = None
     image: Optional[str] = None
     rating: Optional[Decimal] = Field(None, ge=0, le=5)
-    isActive: Optional[bool] = Field(None, validation_alias="is_active", serialization_alias="is_active")
+    isActive: Optional[bool] = Field(None, validation_alias="is_active", serialization_alias="isActive")
 
 
 class RestaurantResponse(RestaurantBase):
     """Model for restaurant response."""
     
+    model_config = {"from_attributes": True, "populate_by_name": True}
+    
     id: str
     rating: Decimal
-    isActive: bool = Field(validation_alias="is_active")
-    createdAt: datetime = Field(validation_alias="created_at")
-    updatedAt: datetime = Field(validation_alias="updated_at")
-    
-    class Config:
-        from_attributes = True
-        populate_by_name = True
+    isActive: bool = Field(validation_alias="is_active", serialization_alias="isActive")
+    createdAt: datetime = Field(validation_alias="created_at", serialization_alias="createdAt")
+    updatedAt: datetime = Field(validation_alias="updated_at", serialization_alias="updatedAt")
 
 
 class DishBase(BaseModel):

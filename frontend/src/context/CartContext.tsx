@@ -272,7 +272,22 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         storePoolId(poolId);
       } catch (error: any) {
         if (error.response?.status === 404) {
-          // Cart not found, initialize empty
+          const message =
+            error.response?.data?.message ??
+            error.response?.data?.detail ??
+            '';
+          const messageText = typeof message === 'string' ? message.toLowerCase() : '';
+
+          // If the pool itself doesn't exist anymore (stale localStorage poolId),
+          // clear it so we don't keep retrying forever.
+          if (messageText.includes('pool not found')) {
+            console.log('[RefreshCart] Pool not found (404), clearing stored poolId');
+            setCart({ poolId: null, items: [] });
+            storePoolId(null);
+            return;
+          }
+
+          // Fallback: treat 404 as empty cart for this pool.
           console.log('[RefreshCart] Cart not found (404), initializing empty');
           setCart({ poolId: poolId, items: [] });
           storePoolId(poolId);

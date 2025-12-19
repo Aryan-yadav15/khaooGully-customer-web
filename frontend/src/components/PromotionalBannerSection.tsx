@@ -60,7 +60,7 @@ const PromotionalBannerSection: React.FC<Props> = ({ banner, poolId }) => {
 
       {/* Horizontal Scroll Restaurant Cards */}
       <div className="overflow-x-auto hide-scrollbar -mx-5 px-5 pb-2">
-        <div className="flex gap-4">
+        <div className="flex gap-3">
           {restaurants.map((restaurant) => {
             const displayPrice = Math.round(restaurant.cost_for_two / 100);
             const originalPrice = Math.round(displayPrice * 1.4);
@@ -69,7 +69,7 @@ const PromotionalBannerSection: React.FC<Props> = ({ banner, poolId }) => {
               <Link
                 key={restaurant.promotion_id}
                 to={poolId ? `/pool/${poolId}/restaurant/${restaurant.restaurant_id}` : `/restaurant/${restaurant.restaurant_id}`}
-                className="min-w-[36vw] w-[36vw] max-w-[180px] sm:min-w-[140px] sm:w-[140px] md:min-w-[160px] md:w-[160px] flex flex-col gap-2 group"
+                className="min-w-[8vw] w-[8vw] max-w-[40px] sm:min-w-[40px] sm:w-[40px] md:min-w-[40px] md:w-[40px] flex flex-col gap-1.5 group"
               >
                 {/* Image Card */}
                 <div className="relative aspect-square rounded-2xl overflow-hidden shadow-sm bg-white">

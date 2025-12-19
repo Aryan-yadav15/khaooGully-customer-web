@@ -345,11 +345,11 @@ export default function Profile() {
                   <div className="flex items-center justify-between sm:justify-end gap-6">
                     <div className="text-right">
                       <p className="font-bold text-lg text-gray-900">₹{(group.totalAmount / 100).toFixed(0)}</p>
-                      <p className={`text-xs font-medium uppercase tracking-wide ${
+                      {/* <p className={`text-xs font-medium uppercase tracking-wide ${
                         group.paymentStatus === 'paid' ? 'text-green-600' : 'text-orange-600'
                       }`}>
                         {group.paymentStatus}
-                      </p>
+                      </p> */}
                     </div>
                     <Link
                       to={`/order/${group.orders[0].orderId}`}

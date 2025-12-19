@@ -54,10 +54,14 @@ const CampusRestaurants: React.FC = () => {
   const [bannerRestaurants, setBannerRestaurants] = useState<
     Record<string, PromotedRestaurant[]>
   >({});
+  const prevCampusIdRef = React.useRef<string | undefined>();
 
   useEffect(() => {
     const fetchData = async () => {
       if (!campusId) return;
+      if (prevCampusIdRef.current === campusId) return;
+      prevCampusIdRef.current = campusId;
+      
       try {
         setLoading(true);
         setError(null);
@@ -351,7 +355,7 @@ const CampusRestaurants: React.FC = () => {
 
               {/* Horizontal Scroll Restaurant Cards */}
               <div className="overflow-x-auto hide-scrollbar -mx-4 px-4 pb-2">
-                <div className="flex gap-4">
+                <div className="flex gap-3">
                   {servingRestaurants.map((promo) => {
                     const poolInfo = getPoolForRestaurant(promo.restaurant_id);
                     if (!poolInfo) return null;
@@ -366,7 +370,7 @@ const CampusRestaurants: React.FC = () => {
                     return (
                       <div
                         key={promo.promotion_id}
-                        className="min-w-[58vw] w-[58vw] max-w-[260px] sm:min-w-[200px] sm:w-[200px] md:min-w-[220px] md:w-[220px] flex flex-col gap-2 group cursor-pointer bg-white p-2.5 rounded-3xl shadow-md"
+                        className="min-w-[75vw] w-[75vw] max-w-[320px] sm:min-w-[280px] sm:w-[280px] md:min-w-[300px] md:w-[300px] flex flex-row gap-3 group cursor-pointer bg-white p-3 rounded-2xl shadow-md"
                         onClick={() =>
                           navigate(
                             `/pool/${poolInfo.poolId}/restaurant/${promo.restaurant_id}`
@@ -374,7 +378,7 @@ const CampusRestaurants: React.FC = () => {
                         }
                       >
                         {/* Image Card */}
-                        <div className="relative aspect-square rounded-2xl overflow-hidden shadow-sm bg-white">
+                        <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden shadow-sm bg-white flex-shrink-0">
                           <img
                             src={
                               promo.restaurant_image ||
@@ -391,48 +395,35 @@ const CampusRestaurants: React.FC = () => {
 
                           {/* Add Button Overlay */}
                           <button
-                            className="absolute bottom-2 right-2 w-8 h-8 bg-white rounded-lg shadow-md flex items-center justify-center text-green-600 hover:scale-110 transition-all z-10"
+                            className="absolute bottom-1 right-1 w-6 h-6 bg-white rounded-lg shadow-md flex items-center justify-center text-green-600 hover:scale-110 transition-all z-10"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <Plus className="w-5 h-5 stroke-[3]" />
+                            <Plus className="w-4 h-4 stroke-[3]" />
                           </button>
                         </div>
 
                         {/* Content */}
-                        <div className="p-3 sm:p-4 flex flex-col gap-2">
-                          {/* Veg/Non-Veg & Name */}
-                          <div className="flex items-start gap-2 mb-1">
-                            <h3 className="font-bold text-gray-800 leading-tight line-clamp-2 text-base sm:text-lg group-hover:opacity-80 transition-opacity">
+                        <div className="flex-1 flex flex-col justify-between min-w-0 pt-2">
+                          <div>
+                            <h3 className="font-bold text-gray-800 leading-tight line-clamp-2 text-sm mb-1 group-hover:opacity-80 transition-opacity">
                               {promo.restaurant_name}
                             </h3>
-                          </div>
-
-                          {/* Price - Show strikethrough if there's a discount badge */}
-                          <div className="flex items-center gap-2 mb-1">
-                            {promo.discount_badge && (
-                              <span className="text-xs text-gray-400 line-through decoration-gray-400">
-                                ₹{displayPrice}
-                              </span>
-                            )}
-                            <span
-                              className={`text-md font-black text-gray-900 ${
-                                promo.discount_badge ? "bg-[#FDE047]" : ""
-                              }  rounded-md`}
-                            >
-                              ₹{displayPrice}
-                            </span>
-                            <div className="flex items-center justify-end w-full">
-                              <div className="flex items-center gap-1 bg-green-100 text-green-700 px-1.5 py-0.5 rounded text-[10px] font-bold">
-                                <Star className="w-2 h-2 fill-current" />
+                            <div className="flex items-center gap-2 mb-1">
+                              <div className="flex items-center gap-0.5 bg-green-600 text-white px-1.5 py-0.5 rounded text-xs font-bold">
+                                <Star className="w-3 h-3 fill-current" />
                                 {promo.rating.toFixed(1)}
                               </div>
+                              <span className="text-xs text-gray-500">• 30 mins</span>
                             </div>
                           </div>
-                          <span className="text-[10px] text-gray-400 font-medium truncate max-w-[180px] sm:max-w-[110px]">
-                            {poolInfo.poolName}
-                          </span>
-
-                          {/* Rating & Delivery Time */}
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-gray-900">
+                              ₹{displayPrice} for two
+                            </span>
+                            <span className="text-[10px] w-1/2 text-blue-600 font-semibold px-2 py-1 bg-blue-50 rounded truncate">
+                              {poolInfo.poolName}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     );

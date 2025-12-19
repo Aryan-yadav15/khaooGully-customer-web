@@ -140,7 +140,7 @@ export const addToCart = async (poolId: string, restaurantId: string, dishId: st
 };
 
 export const getCart = async (poolId: string): Promise<CartSummaryResponse> => {
-  const response = await api.get(`/cart/?poolId=${poolId}`);
+  const response = await api.get('/cart/', { params: { poolId } });
   return response.data;
 };
 
@@ -157,7 +157,7 @@ export const removeCartItem = async (itemId: string) => {
 };
 
 export const clearCart = async (poolId: string) => {
-  await api.delete(`/cart/?poolId=${poolId}`);
+  await api.delete('/cart/', { params: { poolId } });
 };
 
 // Admin API functions
