@@ -61,6 +61,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
 
+    // Validate email domain
+    if (user.email) {
+      const allowedDomains = ['kiit.ac.in', 'kims.ac.in'];
+      const domain = user.email.split('@')[1]?.toLowerCase();
+      if (!domain || !allowedDomains.includes(domain)) {
+        await supabase.auth.signOut();
+        throw new Error(`Only emails from ${allowedDomains.join(', ')} are allowed`);
+      }
+    }
+
     try {
       const { data, error } = await supabase
         .from('customers')

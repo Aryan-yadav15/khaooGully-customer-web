@@ -42,6 +42,12 @@ class Settings(BaseSettings):
     TaxPercentage: int = Field(default=5, alias="tax_percentage")
     MinCartValue: int = Field(default=5000, alias="min_cart_value")
     
+    # Allowed Email Domains
+    AllowedEmailDomains: List[str] = Field(
+        default=["kiit.ac.in", "kims.ac.in"],
+        alias="allowed_email_domains"
+    )
+    
     # Webhook Configuration
     RestaurantWebhookUrl: str = Field(
         default="https://primary-production-3b9d.up.railway.app/webhook/sendRestaurant",

@@ -15,6 +15,7 @@ from app.models.customer import (
     CustomerAddressResponse
 )
 from app.utils.exceptions import NotFoundException, BadRequestException
+from app.utils.auth import ValidateEmailDomain
 
 
 Router = APIRouter(prefix="/profile", tags=["Customer Profile"])
@@ -85,6 +86,7 @@ async def UpdateCustomerProfile(
     if ProfileUpdate.email is not None:
         if not ProfileUpdate.email.strip():
             raise BadRequestException(Detail="Email cannot be empty")
+        ValidateEmailDomain(ProfileUpdate.email)
         UpdateData["email"] = ProfileUpdate.email
     if ProfileUpdate.defaultCampusId is not None:
         UpdateData["default_campus_id"] = ProfileUpdate.defaultCampusId

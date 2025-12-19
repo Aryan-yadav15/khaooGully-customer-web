@@ -222,6 +222,9 @@ export const admin = {
     const response = await api.get(`/admin/pools/${poolId}/orders`);
     return response.data.data || response.data;
   },
+  deleteOrder: async (orderId: string) => {
+    await api.delete(`/admin/orders/${orderId}`);
+  },
 };
 
 export default api;

@@ -239,93 +239,68 @@ const RestaurantDetails: React.FC = () => {
                         </div>
                         
                         {!isCollapsed && (
-                          <div className="grid md:grid-cols-2 gap-4 md:gap-6">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
                             {items.map((dish) => {
                               const quantity = getQuantityInCart(dish.id);
                               
                               return (
-                                <div key={dish.id} className="bg-white p-4 md:p-5 rounded-xl md:rounded-3xl shadow-soft border border-gray-50 flex flex-row md:flex-col justify-between group hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
-                                  {/* Mobile Layout: Text Left, Image Right */}
-                                  <div className="flex-1 min-w-0 pr-3 md:pr-0">
-                                    <div className="flex items-start gap-2 mb-1 md:mb-2">
-                                      <div className={`flex-shrink-0 mt-1 ${dish.veg ? 'border-green-600' : 'border-red-600'} border rounded-sm p-[1px]`}>
-                                        <div className={`w-2 h-2 rounded-full ${dish.veg ? 'bg-green-600' : 'bg-red-600'}`}></div>
+                                <div key={dish.id} className={`bg-white p-5 rounded-3xl shadow-sm border transition-all duration-200 flex flex-col h-full group ${quantity > 0 ? 'border-primary ring-2 ring-primary' : 'border-gray-100 hover:shadow-lg'}`}>
+                                  {/* Image Container */}
+                                  <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden mb-5 bg-gray-50">
+                                    {dish.image ? (
+                                      <img src={dish.image} alt={dish.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                                    ) : (
+                                      <div className="w-full h-full flex items-center justify-center text-gray-300">
+                                        <div className="w-12 h-12 rounded-full border-4 border-current opacity-20"></div>
                                       </div>
-                                      {dish.rating && (
-                                        <div className="md:hidden flex items-center gap-0.5 bg-amber-50 px-1 py-0.5 rounded border border-amber-100">
-                                          <Star className="w-2 h-2 fill-amber-400 text-amber-400" />
-                                          <span className="text-[9px] font-bold text-amber-700">{dish.rating}</span>
-                                        </div>
-                                      )}
-                                    </div>
-
-                                    <h3 className="font-bold text-base md:text-lg text-gray-900 mb-1 leading-tight line-clamp-2 break-words">{dish.name}</h3>
-                                    
-                                    <div className="flex items-center gap-2 mb-2">
-                                      <span className="text-sm md:text-lg font-bold text-gray-900">₹{dish.price / 100}</span>
-                                      {/* Optional: Add original price with strikethrough if available in data */}
-                                    </div>
-
-                                    <p className="text-xs md:text-sm text-gray-500 line-clamp-2 mb-2 md:h-10">{dish.description}</p>
-                                    
-                                    {/* Desktop Rating & Veg Icon (Hidden on Mobile) */}
-                                    <div className="hidden md:flex items-center gap-2">
-                                      {dish.rating && (
-                                        <div className="flex items-center gap-1 bg-amber-50 px-1.5 py-0.5 md:px-2 md:py-1 rounded-lg border border-amber-100">
-                                          <Star className="w-2.5 h-2.5 md:w-3 md:h-3 fill-amber-400 text-amber-400" />
-                                          <span className="text-[9px] md:text-[10px] font-bold text-amber-700">{dish.rating}</span>
-                                        </div>
-                                      )}
-                                      
-                                      <div className={`flex items-center justify-center px-1.5 py-0.5 md:px-2 md:py-1 rounded-lg border ${dish.veg ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100'}`}>
-                                        {dish.veg ? (
-                                            <div className="w-2.5 h-2.5 md:w-3 md:h-3 border border-green-600 rounded-sm flex items-center justify-center p-0.5">
-                                              <div className="w-full h-full bg-green-600 rounded-full"></div>
-                                            </div>
-                                          ) : (
-                                            <div className="w-2.5 h-2.5 md:w-3 md:h-3 border border-red-600 rounded-sm flex items-center justify-center p-0.5">
-                                              <div className="w-full h-full bg-red-600 rounded-full"></div>
-                                            </div>
-                                          )}
-                                      </div>
-                                    </div>
+                                    )}
+                                    {/* Rating Badge */}
+                                    {dish.rating && (
+                                       <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-xl text-sm font-bold flex items-center gap-1.5 shadow-sm">
+                                         <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                                         {dish.rating}
+                                       </div>
+                                    )}
                                   </div>
 
-                                  {/* Image & Add Button Container */}
-                                  <div className="relative w-32 h-32 md:w-full md:h-auto flex-shrink-0 md:mb-4 md:order-first">
-                                    <div className="w-full h-24 md:h-48 bg-gray-100 rounded-xl md:rounded-2xl overflow-hidden relative">
-                                      {dish.image ? (
-                                        <img src={dish.image} alt={dish.name} className="w-full h-full object-cover" />
-                                      ) : (
-                                        <div className="w-full h-full flex items-center justify-center bg-gray-50 text-gray-300">
-                                          <div className="w-8 h-8 rounded-full border-2 border-current opacity-20"></div>
-                                        </div>
-                                      )}
+                                  {/* Content */}
+                                  <div className="flex-1 flex flex-col">
+                                    <div className="flex justify-between items-start gap-3 mb-3">
+                                      <h3 className="font-bold text-gray-900 text-xl md:text-2xl leading-tight line-clamp-2">{dish.name}</h3>
+                                      {/* Veg/Non-veg Icon */}
+                                      <div className={`flex-shrink-0 mt-1.5 ${dish.veg ? 'border-green-600' : 'border-red-600'} border-2 rounded p-[2px]`}>
+                                        <div className={`w-2.5 h-2.5 rounded-full ${dish.veg ? 'bg-green-600' : 'bg-red-600'}`}></div>
+                                      </div>
                                     </div>
                                     
-                                    {/* Add Button - Overlay on Mobile, Bottom on Desktop */}
-                                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-[80%] md:static md:translate-x-0 md:w-full md:mt-4">
+                                    <p className="text-base text-gray-500 line-clamp-2 mb-6 leading-relaxed">{dish.description}</p>
+                                    
+                                    <div className="mt-auto">
+                                      <div className="flex items-center justify-between mb-5">
+                                         <span className="font-bold text-2xl text-gray-900">₹{dish.price / 100}</span>
+                                      </div>
+
                                       {quantity === 0 ? (
-                                        <button
+                                        <button 
                                           onClick={() => handleAdd(dish)}
-                                          className="w-full bg-white text-primary font-bold py-1.5 md:py-3 rounded-lg md:rounded-xl border border-gray-200 shadow-sm hover:bg-gray-50 transition-all flex items-center justify-center gap-1 md:gap-2 text-sm md:text-base uppercase md:bg-primary-light md:text-primary-dark md:border-transparent"
+                                          className="w-full py-4 bg-gray-50 text-primary hover:bg-primary hover:text-white rounded-2xl font-bold text-lg transition-all flex items-center justify-center gap-2.5 group-hover:bg-primary/5"
                                         >
-                                          Add <span className="hidden md:inline">to Cart</span> <Plus className="w-3 h-3 md:w-4 md:h-4" />
+                                          Add to Dish
                                         </button>
                                       ) : (
-                                        <div className="flex items-center justify-between bg-primary text-white rounded-lg md:rounded-xl p-1 shadow-lg shadow-primary/20">
+                                        <div className="flex items-center justify-between bg-primary text-white rounded-2xl p-2 shadow-lg shadow-primary/25">
                                           <button 
-                                            onClick={() => handleDecrement(dish.id)} 
-                                            className="w-6 h-7 md:w-10 md:h-10 flex items-center justify-center hover:bg-white/20 rounded md:rounded-lg transition-colors"
+                                            onClick={() => handleDecrement(dish.id)}
+                                            className="w-12 h-12 flex items-center justify-center hover:bg-white/20 rounded-xl transition-colors"
                                           >
-                                            <Minus className="w-3 h-3 md:w-4 md:h-4" />
+                                            <Minus className="w-6 h-6" />
                                           </button>
-                                          <span className="font-bold text-sm md:text-lg w-4 md:w-8 text-center">{quantity}</span>
+                                          <span className="font-bold text-xl">{quantity}</span>
                                           <button 
-                                            onClick={() => handleIncrement(dish.id)} 
-                                            className="w-6 h-7 md:w-10 md:h-10 flex items-center justify-center hover:bg-white/20 rounded md:rounded-lg transition-colors"
+                                            onClick={() => handleIncrement(dish.id)}
+                                            className="w-12 h-12 flex items-center justify-center hover:bg-white/20 rounded-xl transition-colors"
                                           >
-                                            <Plus className="w-3 h-3 md:w-4 md:h-4" />
+                                            <Plus className="w-6 h-6" />
                                           </button>
                                         </div>
                                       )}

@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
 from jose import JWTError, jwt
 from app.config import settings
-from app.utils.exceptions import UnauthorizedException
+from app.utils.exceptions import UnauthorizedException, BadRequestException
 
 
 def CreateAccessToken(Data: Dict[str, Any], ExpiresMinutes: Optional[int] = None) -> str:
@@ -89,3 +89,31 @@ def ExtractUserIdFromToken(Token: str) -> str:
         return UserId
     except JWTError as Error:
         raise UnauthorizedException(Detail=f"Invalid token format: {str(Error)}")
+
+
+def ValidateEmailDomain(Email: str) -> bool:
+    """
+    Validates if email domain is in the allowed list.
+    
+    Args:
+        Email: Email address to validate
+        
+    Returns:
+        bool: True if email domain is allowed
+        
+    Raises:
+        BadRequestException: If email domain is not allowed
+    """
+    if not Email or '@' not in Email:
+        raise BadRequestException(Detail="Invalid email address")
+    
+    domain = Email.split('@')[-1].lower()
+    allowed_domains = [d.lower() for d in settings.AllowedEmailDomains]
+    
+    if domain not in allowed_domains:
+        allowed_list = ", ".join(settings.AllowedEmailDomains)
+        raise BadRequestException(
+            Detail=f"Email must be from allowed domains: {allowed_list}"
+        )
+    
+    return True

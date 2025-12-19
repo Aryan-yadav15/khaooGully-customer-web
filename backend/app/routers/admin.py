@@ -410,6 +410,27 @@ async def ClosePool(
     return Pool
 
 
+@Router.delete("/orders/{orderId}", status_code=status.HTTP_204_NO_CONTENT)
+async def DeleteOrder(
+    orderId: str,
+    Db: Client = Depends(GetSupabaseAdmin),
+    Admin: dict = Depends(RequireAdmin)
+):
+    """
+    Deletes an order. This will also delete associated cart items.
+    Use with caution - this is permanent.
+    """
+    # Check if order exists
+    OrderCheck = Db.table("customer_orders").select("id").eq("id", orderId).execute()
+    if not OrderCheck.data:
+        raise NotFoundException(Detail="Order not found")
+    
+    # Delete the order (cart_items should cascade delete if set up properly)
+    Db.table("customer_orders").delete().eq("id", orderId).execute()
+    
+    return None
+
+
 @Router.get("/pools/{poolId}/orders", response_model=list[AdminPoolOrderSummary], response_model_by_alias=False)
 async def GetPoolOrders(
     poolId: str,

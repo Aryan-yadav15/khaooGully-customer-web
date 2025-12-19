@@ -116,6 +116,22 @@ const PoolsManagement: React.FC = () => {
     }
   };
 
+  const handleDeleteOrder = async (orderId: string) => {
+    if (!window.confirm('Are you sure you want to delete this order? This action cannot be undone.')) {
+      return;
+    }
+    
+    try {
+      await admin.deleteOrder(orderId);
+      // Remove the order from the list
+      setSelectedPoolOrders(prev => prev.filter(order => order.orderId !== orderId));
+      alert('Order deleted successfully');
+    } catch (error) {
+      console.error('Failed to delete order:', error);
+      alert('Failed to delete order. Please try again.');
+    }
+  };
+
   const handleClosePool = async (pool: Pool) => {
     const label = pool.name?.trim() ? pool.name : pool.id;
     if (!window.confirm(`Mark pool "${label}" as CLOSED? This will set manual_status to closed so backend sync can pick it up.`)) {
@@ -586,8 +602,18 @@ const PoolsManagement: React.FC = () => {
                             </div>
                           </div>
 
-                          {/* Expand Icon */}
-                          <div className="ml-4">
+                          {/* Actions */}
+                          <div className="ml-4 flex items-center gap-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteOrder(order.orderId);
+                              }}
+                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                              title="Delete Order"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
                             {expandedOrderId === order.orderId ? (
                               <ChevronUp className="w-5 h-5 text-gray-400" />
                             ) : (

@@ -26,6 +26,10 @@ const Signup: React.FC = () => {
         </div>
 
         <div className="bg-white rounded-2xl md:rounded-3xl shadow-xl shadow-gray-100 border border-gray-100 p-8 md:p-10">
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl text-blue-700 text-sm">
+            <strong className="font-semibold">Note:</strong> Only email addresses from <strong>@kiit.ac.in</strong> or <strong>@kims.ac.in</strong> domains are allowed.
+          </div>
+
           {error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm font-medium">
               {error}
