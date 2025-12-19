@@ -520,6 +520,25 @@ const PoolsManagement: React.FC = () => {
               <div>
                 <h2 className="text-xl font-bold text-gray-900">Pool Orders</h2>
                 <p className="text-sm text-gray-500 mt-1">{selectedPoolName}</p>
+                {(() => {
+                  const selectedPool = pools.find(p => p.name === selectedPoolName);
+                  if (selectedPool?.closed_at) {
+                    return (
+                      <div className="mt-2 flex items-center gap-2 text-xs font-medium text-green-700 bg-green-50 px-3 py-1.5 rounded-lg border border-green-200 inline-flex">
+                        <Clock className="w-3.5 h-3.5" />
+                        Sent to restaurants: {new Date(selectedPool.closed_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
+                      </div>
+                    );
+                  } else if (selectedPool?.collection_end) {
+                    return (
+                      <div className="mt-2 flex items-center gap-2 text-xs font-medium text-gray-600 bg-gray-100 px-3 py-1.5 rounded-lg inline-flex">
+                        <Clock className="w-3.5 h-3.5" />
+                        Scheduled close: {new Date(selectedPool.collection_end).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
               </div>
               <button 
                 onClick={() => {

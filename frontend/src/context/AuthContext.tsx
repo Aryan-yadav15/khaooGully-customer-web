@@ -15,6 +15,8 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<void>;
   markPhoneCompleted: () => void;
+  authError: string | null;
+  clearAuthError: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -25,6 +27,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [needsPhone, setNeedsPhone] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
     // Check active sessions and sets the user
@@ -67,7 +70,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const domain = user.email.split('@')[1]?.toLowerCase();
       if (!domain || !allowedDomains.includes(domain)) {
         await supabase.auth.signOut();
-        throw new Error(`Only emails from ${allowedDomains.join(', ')} are allowed`);
+        setAuthError(`Only emails from @kiit.ac.in and @kims.ac.in are allowed. Please use your university email.`);
+        return;
       }
     }
 
@@ -165,8 +169,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await supabase.auth.signOut();
   };
 
+  const clearAuthError = () => setAuthError(null);
+
   return (
-    <AuthContext.Provider value={{ user, session, loading, isAdmin, needsPhone, signUp, signIn, signInWithGoogle, signOut, markPhoneCompleted }}>
+    <AuthContext.Provider value={{ user, session, loading, isAdmin, needsPhone, signUp, signIn, signInWithGoogle, signOut, markPhoneCompleted, authError, clearAuthError }}>
       {children}
     </AuthContext.Provider>
   );

@@ -79,9 +79,13 @@ const OrderTracking: React.FC = () => {
     </div>
   );
 
+  const poolClosedTime = order.poolClosedAt 
+    ? new Date(order.poolClosedAt).toLocaleString('en-IN', { timeStyle: 'short' })
+    : null;
+
   const steps = [
     { status: 'pooling', label: 'Pooling Orders', description: 'Waiting for pool to close' },
-    { status: 'pending', label: 'Order Confirmed', description: 'Pool closed, order sent to restaurant' },
+    { status: 'pending', label: 'Order Confirmed', description: poolClosedTime ? <>Sent to restaurant at <span className="text-black font-bold">{poolClosedTime}</span></> : 'Pool closed, order sent to restaurant' },
     { status: 'accepted', label: 'Order Accepted', description: 'Restaurant is preparing your food' },
     { status: 'out_for_delivery', label: 'Out for Delivery', description: 'On the way to hotspot' },
     { status: 'delivered', label: 'Delivered', description: 'Enjoy your meal!' },
@@ -314,6 +318,23 @@ const OrderTracking: React.FC = () => {
               <div>
                 <span className="font-bold text-gray-900 block">Pool</span>
                 <span className="text-gray-600">{order.poolName}</span>
+              </div>
+            </div>
+          )}
+          {(order.poolClosedAt || order.deliveryWindow) && (
+            <div className="flex items-start gap-3">
+              <Clock className="w-4 h-4 text-gray-400 mt-0.5" />
+              <div>
+                <span className="font-bold text-gray-900 block">Sent to Restaurant</span>
+                <span className="text-gray-600">
+                  {order.poolClosedAt 
+                    ? new Date(order.poolClosedAt).toLocaleString('en-IN', { 
+                        dateStyle: 'medium', 
+                        timeStyle: 'short' 
+                      })
+                    : `Scheduled for ${order.deliveryWindow}`
+                  }
+                </span>
               </div>
             </div>
           )}

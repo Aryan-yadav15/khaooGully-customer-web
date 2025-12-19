@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Building2, MapPin, UtensilsCrossed, Users, ArrowRight, TrendingUp, Activity, ShieldCheck } from 'lucide-react';
+import { Building2, MapPin, UtensilsCrossed, Users, ArrowRight, TrendingUp, Activity, ShieldCheck, Award } from 'lucide-react';
 import { getCampuses, getPools, getRestaurants } from '../../services/api';
 
 const Dashboard: React.FC = () => {
@@ -99,6 +99,15 @@ const Dashboard: React.FC = () => {
       color: 'text-green-600',
       bg: 'bg-green-50',
       hover: 'group-hover:bg-green-600 group-hover:text-white'
+    },
+    {
+      title: 'Manage Promotions',
+      description: 'Create promotional banners and feature restaurants on homepage',
+      icon: Award,
+      link: '/admin/promotions',
+      color: 'text-lime-600',
+      bg: 'bg-lime-50',
+      hover: 'group-hover:bg-lime-600 group-hover:text-white'
     }
   ];
 

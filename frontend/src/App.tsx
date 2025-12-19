@@ -16,14 +16,17 @@ import Dashboard from './pages/admin/Dashboard';
 import PoolsManagement from './pages/admin/PoolsManagement';
 import CampusesManagement from './pages/admin/CampusesManagement';
 import RestaurantsManagement from './pages/admin/RestaurantsManagement';
+import PromotionsManagement from './pages/admin/PromotionsManagement';
 import { CartProvider } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
+import AuthErrorModal from './components/AuthErrorModal';
 
 function App() {
   return (
     <AuthProvider>
       <CartProvider>
         <Router>
+          <AuthErrorModal />
           <Layout>
             <Routes>
               <Route path='/' element={<Home />} />
@@ -42,6 +45,7 @@ function App() {
               <Route path='/admin/pools' element={<ProtectedAdminRoute><PoolsManagement /></ProtectedAdminRoute>} />
               <Route path='/admin/campuses' element={<ProtectedAdminRoute><CampusesManagement /></ProtectedAdminRoute>} />
               <Route path='/admin/restaurants' element={<ProtectedAdminRoute><RestaurantsManagement /></ProtectedAdminRoute>} />
+              <Route path='/admin/promotions' element={<ProtectedAdminRoute><PromotionsManagement /></ProtectedAdminRoute>} />
             </Routes>
           </Layout>
         </Router>

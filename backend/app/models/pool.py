@@ -67,6 +67,7 @@ class OrderPoolResponse(OrderPoolBase):
     is_active: bool
     created_at: datetime
     updated_at: datetime
+    closed_at: Optional[datetime] = None
     
     class Config:
         from_attributes = True
@@ -95,6 +96,7 @@ class PoolStatsResponse(BaseModel):
     fleetbase_pool_id: Optional[str] = None
     created_at: datetime
     updated_at: datetime
+    closed_at: Optional[datetime] = None
     
     class Config:
         from_attributes = True

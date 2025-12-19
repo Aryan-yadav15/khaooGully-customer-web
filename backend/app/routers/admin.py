@@ -390,8 +390,12 @@ async def ClosePool(
                     "reason": "Webhook delivery failed"
                 })
     
-    # 5. Mark pool as closed
-    Updated = Db.table("order_pools").update({"manual_status": "closed"}).eq("id", poolId).execute()
+    # 5. Mark pool as closed and record the timestamp
+    from datetime import datetime, timezone
+    Updated = Db.table("order_pools").update({
+        "manual_status": "closed",
+        "closed_at": datetime.now(timezone.utc).isoformat()
+    }).eq("id", poolId).execute()
     if not Updated.data:
         raise NotFoundException(Detail="Pool not found")
 

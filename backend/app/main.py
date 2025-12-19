@@ -24,7 +24,8 @@ from app.routers import (
     referrals,
     wallet,
     support,
-    notifications
+    notifications,
+    promotions
 )
 
 
@@ -160,6 +161,7 @@ App.include_router(referrals.Router)
 App.include_router(wallet.Router)
 App.include_router(support.Router)
 App.include_router(notifications.Router)
+App.include_router(promotions.router)
 
 
 # Health Check Endpoint

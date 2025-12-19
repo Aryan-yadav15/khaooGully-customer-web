@@ -157,6 +157,7 @@ class OrderDetailResponse(BaseModel):
 
     deliveryWindow: str = Field(validation_alias="delivery_window")
     fleetbasePoolId: Optional[str] = Field(None, validation_alias="fleetbase_pool_id")
+    poolClosedAt: Optional[datetime] = Field(None, validation_alias="pool_closed_at")
     orderedAt: datetime = Field(validation_alias="ordered_at")
     updatedAt: datetime = Field(validation_alias="updated_at")
 

@@ -232,8 +232,22 @@ async def GetOrderGroup(
     
     if not Response.data:
         raise NotFoundException(Detail="Order group not found")
-    
-    return [OrderDetailResponse(**order) for order in Response.data]
+
+    # Attach pool close timestamp (when orders were sent to restaurants)
+    pool_ids = list({o.get("pool_id") for o in Response.data if o.get("pool_id")})
+    pool_closed_by_id = {}
+    if pool_ids:
+        PoolsResp = Db.table("order_pools").select("id,closed_at").in_("id", pool_ids).execute()
+        for p in (PoolsResp.data or []):
+            pool_closed_by_id[p.get("id")] = p.get("closed_at")
+
+    enriched = []
+    for order in Response.data:
+        pid = order.get("pool_id")
+        order["pool_closed_at"] = pool_closed_by_id.get(pid)
+        enriched.append(OrderDetailResponse(**order))
+
+    return enriched
 
 
 @Router.get("/", response_model=List[CustomerOrderHistoryResponse])
@@ -290,7 +304,19 @@ async def GetOrderDetails(
     # Verify order belongs to user
     if Item["customer_id"] != UserId:
         raise NotFoundException(Detail="Order not found")
-    
+
+    # Attach pool close timestamp (when orders were sent to restaurants)
+    pool_id = Item.get("pool_id")
+    if pool_id:
+        PoolResp = Db.table("order_pools").select("closed_at").eq("id", pool_id).execute()
+        Item["pool_closed_at"] = (
+            PoolResp.data[0].get("closed_at")
+            if getattr(PoolResp, "data", None)
+            else None
+        )
+    else:
+        Item["pool_closed_at"] = None
+
     return OrderDetailResponse(**Item)
 
 

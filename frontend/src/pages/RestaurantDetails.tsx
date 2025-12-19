@@ -299,7 +299,7 @@ const RestaurantDetails: React.FC = () => {
                                             {quantity === 0 ? (
                                                 <button 
                                                 onClick={() => handleAdd(dish)}
-                                                className="w-full py-2 md:py-4 bg-gray-50 text-primary hover:bg-primary hover:text-white rounded-xl md:rounded-2xl font-bold text-sm md:text-lg transition-all flex items-center justify-center gap-1.5 md:gap-2.5 group-hover:bg-primary/5"
+                                                className="w-full py-2 md:py-4 bg-gray-50 text-primary hover:bg-emerald-400 hover:text-white rounded-xl md:rounded-2xl font-bold text-sm md:text-lg transition-all flex items-center justify-center gap-1.5 md:gap-2.5 hover:text-xl"
                                                 >
                                                 Add <span className="hidden md:inline">to Cart</span>
                                                 </button>

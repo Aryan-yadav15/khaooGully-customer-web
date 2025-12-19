@@ -14,10 +14,10 @@ const Home: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchCampuses = async () => {
+    const fetchData = async () => {
       try {
-        const data = await getCampuses();
-        setCampuses(data);
+        const campusesData = await getCampuses();
+        setCampuses(campusesData);
       } catch (err) {
         console.error(err);
         setError('Failed to load campuses. Please try again.');
@@ -26,7 +26,7 @@ const Home: React.FC = () => {
       }
     };
 
-    fetchCampuses();
+    fetchData();
   }, []);
 
   const handleCampusSelect = (campusId: string) => {

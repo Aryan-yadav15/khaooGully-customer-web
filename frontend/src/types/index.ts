@@ -1,3 +1,6 @@
+// Promotional Banners
+export * from './promotion';
+
 export interface Campus {
   id: string;
   name: string;
@@ -74,6 +77,7 @@ export interface Pool {
   is_active?: boolean;
   created_at?: string;
   updated_at?: string;
+  closed_at?: string;
 }
 
 export interface CartItem {
@@ -162,6 +166,7 @@ export interface Order {
   fleetbasePoolId?: string;
   orderedAt: string;
   updatedAt: string;
+  poolClosedAt?: string;
 }
 
 export interface AdminPoolOrder {
