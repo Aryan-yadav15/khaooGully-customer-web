@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { User, Phone, Mail, Calendar, Clock, ShoppingBag, ChevronRight, Edit2, Save, X, Loader2 } from 'lucide-react';
 import type { CustomerOrderHistoryItem, CustomerProfileSummary } from '../types';
 import { getCustomerOrders, getCustomerProfile, updateCustomerProfile } from '../services/api';
-import { formatLocalTime } from '../utils/datetime';
+import { formatLocalTime, formatLocalDate } from '../utils/datetime';
 import { useAuth } from '../context/AuthContext';
 
 // Group orders by orderGroupId for display
@@ -263,7 +263,7 @@ export default function Profile() {
                 <Calendar className="w-3.5 h-3.5" />
                 Member Since
               </div>
-              <p className="text-lg font-semibold text-gray-900 pl-1">{formatLocalTime(profile.memberSince)}</p>
+              <p className="text-lg font-semibold text-gray-900 pl-1">{formatLocalDate(profile.memberSince)}</p>
             </div>
           </div>
         </div>

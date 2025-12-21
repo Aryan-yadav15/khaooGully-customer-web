@@ -268,7 +268,7 @@ const OrderTracking: React.FC = () => {
       </div>
 
       {/* Order Summary Card */}
-      <div className="bg-white rounded-xl md:rounded-3xl shadow-soft border border-gray-100 p-8">
+      <div className="bg-white rounded-xl md:rounded-3xl shadow-soft border border-gray-100 p-4 md:p-8">
         {(() => {
           const allOrdersInGroup = [order, ...siblingOrders];
           const rejectedCount = allOrdersInGroup.filter(o => {
@@ -278,12 +278,12 @@ const OrderTracking: React.FC = () => {
           const acceptedCount = allOrdersInGroup.length - rejectedCount;
           
           return rejectedCount > 0 && acceptedCount > 0 ? (
-            <div className="mb-6 p-4 bg-orange-50 border-2 border-orange-200 rounded-2xl">
+            <div className="mb-4 md:mb-6 p-3 md:p-4 bg-orange-50 border-2 border-orange-200 rounded-2xl">
               <div className="flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
+                <AlertCircle className="w-4 h-4 md:w-5 md:h-5 text-orange-600 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-bold text-orange-900 text-lg">Mixed Order Status</p>
-                  <p className="text-orange-700 text-sm mt-1">
+                  <p className="font-bold text-orange-900 text-base md:text-lg">Mixed Order Status</p>
+                  <p className="text-orange-700 text-xs md:text-sm mt-1">
                     {acceptedCount} of {allOrdersInGroup.length} restaurant{allOrdersInGroup.length > 1 ? 's' : ''} accepted your order. 
                     {rejectedCount} rejected. Amount reflects accepted orders only.
                   </p>
@@ -293,25 +293,25 @@ const OrderTracking: React.FC = () => {
           ) : null;
         })()}
         
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-            <Receipt className="w-5 h-5 text-primary" />
+        <div className="flex items-center justify-between mb-4 md:mb-6">
+          <h2 className="text-lg md:text-xl font-bold text-gray-900 flex items-center gap-2">
+            <Receipt className="w-4 h-4 md:w-5 md:h-5 text-primary" />
             Order Summary
             {siblingOrders.length > 0 && (
-              <span className="ml-2 px-2 py-0.5 bg-primary-light text-primary text-xs font-bold rounded-full">
+              <span className="ml-2 px-2 py-0.5 bg-primary-light text-primary text-[10px] md:text-xs font-bold rounded-full">
                 {siblingOrders.length + 1} restaurants
               </span>
             )}
           </h2>
           <div className="text-right">
-            <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">{paymentLabel}</p>
-            <p className={`text-xs font-bold uppercase tracking-wide mt-0.5 ${
+            <p className="text-[10px] md:text-xs text-gray-500 font-bold uppercase tracking-wider">{paymentLabel}</p>
+            <p className={`text-[10px] md:text-xs font-bold uppercase tracking-wide mt-0.5 ${
               order.paymentStatus === 'paid' ? 'text-green-600' : 'text-orange-600'
             }`}>{order.paymentStatus}</p>
           </div>
         </div>
 
-        <div className="bg-gray-50 rounded-xl md:rounded-2xl p-5 mb-6 space-y-3 text-sm">
+        <div className="bg-gray-50 rounded-xl md:rounded-2xl p-3 md:p-5 mb-4 md:mb-6 space-y-2 md:space-y-3 text-xs md:text-sm">
           {order.poolName && (
             <div className="flex items-start gap-3">
               <Store className="w-4 h-4 text-gray-400 mt-0.5" />
@@ -415,7 +415,7 @@ const OrderTracking: React.FC = () => {
                           <span className="w-2 h-2 bg-red-600 rounded-full"></span>
                         </span>
                       )}
-                      <p className="font-bold text-gray-900 truncate">{name}</p>
+                      <p className="font-bold text-gray-900">{name}</p>
                     </div>
                     <p className="text-sm text-gray-500 mt-1 font-medium pl-6">
                       {quantity} × {formatMoney(unitPrice)}

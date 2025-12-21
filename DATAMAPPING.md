@@ -57,41 +57,7 @@ GitHub Copilot: I understand the concept you're proposing. Let me summarize and 
 - Cart is likely campus-specific. If user switches campus, does cart clear?
 - On the new landing page (before login), should users even be able to add to cart, or is that blocked?
 
----
 
-Once you clarify these, I'll have a complete picture to design the data flow and component changes properly.
-
-User: they are a lot of reltaion among who can serve who and yes 1 restraunt can serve to more that n 1 campus assume a pool as a path from a cluster of restraunt to a hotspot i would recomend you to understand this reltaion first before we discuss fursteh about how are the relation setup and brief me with it than weill discuss further
-
-GitHub Copilot: Let me explore the codebase to understand the data relationships properly. 
-
-Read [](file:///c%3A/Codes/BUILDS/1.1-Sartup/KhaaoGali/new%20customer%20website/currentdbschema.md#1-1), lines 1 to 200
-
-Read [](file:///c%3A/Codes/BUILDS/1.1-Sartup/KhaaoGali/new%20customer%20website/buisnesslogic.md#1-1), lines 1 to 200
-
-Read [](file:///c%3A/Codes/BUILDS/1.1-Sartup/KhaaoGali/new%20customer%20website/buisnesslogic.md#200-200), lines 200 to 400
-
-Read [](file:///c%3A/Codes/BUILDS/1.1-Sartup/KhaaoGali/new%20customer%20website/currentdbschema.md#200-200), lines 200 to 400
-
-Read [](file:///c%3A/Codes/BUILDS/1.1-Sartup/KhaaoGali/new%20customer%20website/currentdbschema.md#400-400), lines 400 to 600
-
-Read [](file:///c%3A/Codes/BUILDS/1.1-Sartup/KhaaoGali/new%20customer%20website/backend/app/models/campus_restaurants.py)
-
-Searched for regex `promoted_restaurants|promotional_banner`, 20 results
-
-Read [](file:///c%3A/Codes/BUILDS/1.1-Sartup/KhaaoGali/new%20customer%20website/backend/migrations/add_promotional_banners.sql#1-1), lines 1 to 200
-
-Read [](file:///c%3A/Codes/BUILDS/1.1-Sartup/KhaaoGali/new%20customer%20website/backend/app/routers/campuses.py#1-1), lines 1 to 100
-
-Read [](file:///c%3A/Codes/BUILDS/1.1-Sartup/KhaaoGali/new%20customer%20website/backend/app/routers/campuses.py#100-100), lines 100 to 217
-
-Searched for text `pool_restaurants`, 16 results
-
-Read [](file:///c%3A/Codes/BUILDS/1.1-Sartup/KhaaoGali/new%20customer%20website/currentdbschema.md#600-600), lines 600 to 700
-
-Now I have a clear picture of your data model. Let me summarize it back to you:
-
----
 
 ## 📊 Data Relationship Summary
 
@@ -173,29 +139,3 @@ Instead:
 
 ---
 
-## ❓ Follow-up Questions for Your New Flow
-
-Given this understanding:
-
-1. **Landing Page - All Restaurants:** Should we show restaurants with their **possible delivery campuses/pools**, or just show them as a "catalog" without pool context?
-
-2. **When user clicks restaurant (before login):** Do we show the menu? Or block at restaurant card level?
-
-3. **After login + campus selection:** Do we need to verify that the restaurant they were looking at **actually serves their default campus**? What if it doesn't?
-
-4. **Promotional banners:** Currently can be campus-specific (`campus_id`). For the new landing page, should we:
-   - Ignore `campus_id` and show all banners?
-   - Only show banners where `campus_id IS NULL`?
-
-Let me know your thoughts on these!
-
-User: ya kinda this coz wwhen they click on a restraunt than they are redirected to login anyways
-OR just show all restaurants as a discovery page (without delivery context), just show them as a "catalog" without pool context
-
-if we can show the menu that will be like gold amazoing 
-
-is the restraunt dosent serve there hotspot just redirect them to the restraunt list page tehat is serving there camopus
-
-we jsut ignre campus ifd and show promotion banner to all
-
-GitHub Copilot: 

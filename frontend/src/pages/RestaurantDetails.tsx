@@ -246,12 +246,12 @@ const RestaurantDetails: React.FC = () => {
                     const isCollapsed = collapsedSections[category];
                     return (
                       <div key={category} id={`category-${category}`} className="scroll-mt-28">
-                        <div className="sticky top-[4.5rem] md:top-[6rem] z-20 -mx-0 px-12 md:mx-0 md:px-4  mb-4 bg-gray-100 backdrop-blur-sm py-2 border-[2px] rounded-2xl border-gray-200/50">
+                        <div className="sticky top-[4rem] md:top-[5.5rem] z-20 -mx-0 px-12 md:mx-0 md:px-4  mb-4 bg-white backdrop-blur-sm py-1 md:py-2 border-t-[2px] rounded-md border-gray-200/50">
                           <button 
                             onClick={() => toggleSection(category)}
                             className="w-full flex justify-between items-center gap-3 group"
                           >
-                            <h3 className="text-sm md:text-md font-bold text-gray-600">{category} ({items.length})</h3>
+                            <h3 className="text-[0.7rem] md:text-md font-bold text-gray-600">{category} ({items.length})</h3>
                             <div className={`text-gray-500 transition-transform duration-300 ${isCollapsed ? '' : 'rotate-180'}`}>
                                <ChevronDown />
                             </div>

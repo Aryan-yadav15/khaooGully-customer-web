@@ -76,8 +76,28 @@ const RestaurantMenu: React.FC = () => {
       sections[category].push(dish);
     });
 
+    // Sort each category: items with images first, then items without images
+    Object.keys(sections).forEach(category => {
+      sections[category].sort((a, b) => {
+        const aHasImage = a.image && a.image.trim() !== '';
+        const bHasImage = b.image && b.image.trim() !== '';
+        
+        if (aHasImage && !bHasImage) return -1;
+        if (!aHasImage && bHasImage) return 1;
+        return 0;
+      });
+    });
+
     if (!hasTags) {
-      return { 'All Items': filteredMenu };
+      const sortedItems = [...filteredMenu].sort((a, b) => {
+        const aHasImage = a.image && a.image.trim() !== '';
+        const bHasImage = b.image && b.image.trim() !== '';
+        
+        if (aHasImage && !bHasImage) return -1;
+        if (!aHasImage && bHasImage) return 1;
+        return 0;
+      });
+      return { 'All Items': sortedItems };
     }
 
     return sections;
@@ -217,7 +237,7 @@ const RestaurantMenu: React.FC = () => {
                   const isCollapsed = collapsedSections[category];
                   return (
                     <div key={category} id={`category-${category}`} className="scroll-mt-28">
-                      <div className="sticky top-[4.5rem] md:top-[6rem] z-20 -mx-0 px-12 md:mx-0 md:px-4 mb-4 bg-gray-100 backdrop-blur-sm py-2 border-[2px] rounded-2xl border-gray-200/50">
+                      <div className="sticky top-[4.5rem] md:top-[6rem] z-20 -mx-0 px-12 md:mx-0 md:px-4 mb-4 bg-gray-500 backdrop-blur-sm py-2 border-[2px] rounded-2xl border-gray-200/50">
                         <button 
                           onClick={() => toggleSection(category)}
                           className="w-full flex justify-between items-center gap-3 group"
@@ -233,23 +253,19 @@ const RestaurantMenu: React.FC = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
                           {items.map((dish) => (
                             <div key={dish.id} className="bg-white p-4 md:p-5 rounded-2xl md:rounded-3xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-200 flex flex-row md:flex-col gap-4 md:gap-0 h-full group">
-                              {/* Image Container */}
-                              <div className="relative w-32 h-32 md:w-full md:aspect-[4/3] md:h-auto flex-shrink-0 rounded-xl md:rounded-2xl overflow-hidden bg-gray-50 md:mb-5">
-                                {dish.image ? (
+                              {/* Image Container - Only show if image exists */}
+                              {dish.image && dish.image.trim() !== '' && (
+                                <div className="relative w-32 h-32 md:w-full md:aspect-[4/3] md:h-auto flex-shrink-0 rounded-xl md:rounded-2xl overflow-hidden bg-gray-50 md:mb-5">
                                   <img src={dish.image} alt={dish.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center text-gray-300">
-                                    <div className="w-8 h-8 md:w-12 md:h-12 rounded-full border-2 md:border-4 border-current opacity-20"></div>
-                                  </div>
-                                )}
-                                {/* Rating Badge - Desktop Only */}
-                                {dish.rating && (
-                                  <div className="hidden md:flex absolute top-4 left-4 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-xl text-sm font-bold items-center gap-1.5 shadow-sm">
-                                    <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-                                    {dish.rating}
-                                  </div>
-                                )}
-                              </div>
+                                  {/* Rating Badge - Desktop Only */}
+                                  {dish.rating && (
+                                    <div className="hidden md:flex absolute top-4 left-4 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-xl text-sm font-bold items-center gap-1.5 shadow-sm">
+                                      <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                                      {dish.rating}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
 
                               {/* Content */}
                               <div className="flex-1 flex flex-col min-w-0">

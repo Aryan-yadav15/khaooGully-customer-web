@@ -97,3 +97,15 @@ export function formatLocalTime(iso: string | null | undefined): string {
   if (Number.isNaN(date.getTime())) return '';
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZone: IST_TIME_ZONE });
 }
+
+export function formatLocalDate(iso: string | null | undefined): string {
+  if (!iso) return '';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleDateString('en-IN', { 
+    year: 'numeric', 
+    month: 'short', 
+    day: 'numeric',
+    timeZone: IST_TIME_ZONE 
+  });
+}
